@@ -39,7 +39,7 @@ public class TrainerController {
 	}
 
 	@PutMapping("{id}")
-	public ResponseEntity<Trainer> editTrainer(@PathVariable long id, @RequestBody Trainer trainerDetail)
+	public ResponseEntity<Trainer> editTrainer(@PathVariable long id, @RequestBody TrainerDTO trainerDetail)
 			throws Exception {
 		return trainerService.editTrainer(id, trainerDetail);
 	}

@@ -41,14 +41,16 @@ public class TrainerServiceImpl implements ITrainerService {
 	}
 
 	@Override
-	public ResponseEntity<Trainer> editTrainer(long id, Trainer trainerDetail) throws Exception {
+	public ResponseEntity<Trainer> editTrainer(long id, TrainerDTO trainerDetail) throws Exception {
 		Trainer trainer = trainerRepo.findById(id)
 				.orElseThrow(() -> new Exception("Trainer not exist with id : " + id));
 		trainer.setName(trainerDetail.getName());
 		trainer.setLastName(trainerDetail.getLastName());
-		trainer.setDPI(trainerDetail.getDPI());
+		trainer.setDPI(trainerDetail.getDpi());
 		trainer.setBirth(trainerDetail.getBirth());
-		trainer.setKyu(trainerDetail.getKyu());
+		Kyu kyu = kyuRepo.findById(trainerDetail.getKyuId())
+				.orElseThrow(() -> new Exception("Kyu not exist with id: " + trainerDetail.getKyuId()));
+		trainer.setKyu(kyu);
 
 		trainerRepo.save(trainer);
 

@@ -14,7 +14,7 @@ public interface ITrainerService {
 
 	void addTrainer(TrainerDTO trainer) throws Exception;
 
-	ResponseEntity<Trainer> editTrainer(long id, Trainer trainerDetail) throws Exception;
+	ResponseEntity<Trainer> editTrainer(long id, TrainerDTO trainerDetail) throws Exception;
 
 	ResponseEntity<HttpStatus> deleteTrainer(long id) throws Exception;
 
