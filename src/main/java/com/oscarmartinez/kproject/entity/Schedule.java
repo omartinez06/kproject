@@ -1,9 +1,12 @@
 package com.oscarmartinez.kproject.entity;
 
+import java.util.List;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -19,6 +22,9 @@ public class Schedule {
 	private String schedule;
 	private String days;
 	private String ageRange;
+	
+	@ManyToMany(mappedBy = "schedules")
+	List<Student> students;
 	
 	public long getId() {
 		return id;
@@ -43,6 +49,12 @@ public class Schedule {
 	}
 	public void setAgeRange(String ageRange) {
 		this.ageRange = ageRange;
+	}
+	public List<Student> getStudents() {
+		return students;
+	}
+	public void setStudents(List<Student> students) {
+		this.students = students;
 	}
 	
 }

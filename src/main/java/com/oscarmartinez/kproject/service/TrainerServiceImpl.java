@@ -26,7 +26,7 @@ public class TrainerServiceImpl implements ITrainerService {
 	public void addTrainer(TrainerDTO trainer) throws Exception {
 		Trainer newTrainer = new Trainer();
 		newTrainer.setBirth(trainer.getBirth());
-		newTrainer.setDPI(trainer.getDpi());
+		newTrainer.setDpi(trainer.getDpi());
 		Kyu kyu = kyuRepo.findById(trainer.getKyuId())
 				.orElseThrow(() -> new Exception("Kyu not exist with id: " + trainer.getKyuId()));
 		newTrainer.setKyu(kyu);
@@ -46,7 +46,7 @@ public class TrainerServiceImpl implements ITrainerService {
 				.orElseThrow(() -> new Exception("Trainer not exist with id : " + id));
 		trainer.setName(trainerDetail.getName());
 		trainer.setLastName(trainerDetail.getLastName());
-		trainer.setDPI(trainerDetail.getDpi());
+		trainer.setDpi(trainerDetail.getDpi());
 		trainer.setBirth(trainerDetail.getBirth());
 		Kyu kyu = kyuRepo.findById(trainerDetail.getKyuId())
 				.orElseThrow(() -> new Exception("Kyu not exist with id: " + trainerDetail.getKyuId()));
