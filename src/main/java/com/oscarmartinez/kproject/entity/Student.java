@@ -10,6 +10,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinTable;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -29,9 +30,11 @@ public class Student {
 	private String bloodType;
 	private String tutor;
 
-	@ManyToMany
-	@JoinTable(name = "schedule_student", joinColumns = @JoinColumn(name = "student_id"), inverseJoinColumns = @JoinColumn(name = "schedule_id"))
-	List<Schedule> schedules;
+	@ManyToOne
+	private Schedule schedule;
+	
+	@ManyToOne
+	private Kyu kyu;
 
 	public long getId() {
 		return id;
@@ -89,12 +92,20 @@ public class Student {
 		this.tutor = tutor;
 	}
 
-	public List<Schedule> getSchedules() {
-		return schedules;
+	public Schedule getSchedule() {
+		return schedule;
 	}
 
-	public void setSchedules(List<Schedule> schedules) {
-		this.schedules = schedules;
+	public void setSchedule(Schedule schedule) {
+		this.schedule = schedule;
+	}
+
+	public Kyu getKyu() {
+		return kyu;
+	}
+
+	public void setKyu(Kyu kyu) {
+		this.kyu = kyu;
 	}
 
 }

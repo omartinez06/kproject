@@ -10,8 +10,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.oscarmartinez.kproject.entity.Kyu;
 import com.oscarmartinez.kproject.entity.Schedule;
 import com.oscarmartinez.kproject.entity.Student;
+import com.oscarmartinez.kproject.repository.IKyuRepository;
 import com.oscarmartinez.kproject.repository.IScheduleRepository;
 import com.oscarmartinez.kproject.repository.IStudentRepository;
 import com.oscarmartinez.kproject.resource.StudentDTO;
@@ -30,6 +32,9 @@ public class StudentSeriviceImpl implements IStudentService {
 	@Autowired
 	private IScheduleRepository scheduleRepository;
 
+	@Autowired
+	private IKyuRepository kyuRepository;
+
 	@Override
 	public List<Student> listStudents() {
 		return studentRepository.findAll();
@@ -45,17 +50,12 @@ public class StudentSeriviceImpl implements IStudentService {
 		newStudent.setBirth(student.getBirth());
 		newStudent.setBloodType(student.getBloodType());
 		newStudent.setTutor(student.getTutor());
-		List<Schedule> schedules = new ArrayList<Schedule>();
-		student.getSchedules().forEach(s -> {
-			try {
-				Schedule schedule = scheduleRepository.findById(s)
-						.orElseThrow(() -> new Exception("Schedule not exist with id: " + s));
-				schedules.add(schedule);
-			} catch (Exception e) {
-				logger.error("{} - error to fill schedule list, {}", METHOD_NAME, e);
-			}
-		});
-		newStudent.setSchedules(schedules);
+		Schedule schedule = scheduleRepository.findById(student.getSchedule())
+				.orElseThrow(() -> new Exception("Schedule not exist with id: " + student.getSchedule()));
+		newStudent.setSchedule(schedule);
+		Kyu kyu = kyuRepository.findById(student.getKyuId())
+				.orElseThrow(() -> new Exception("Kyu not exist with id: " + student.getKyuId()));
+		newStudent.setKyu(kyu);
 
 		studentRepository.save(newStudent);
 	}
@@ -71,17 +71,12 @@ public class StudentSeriviceImpl implements IStudentService {
 		student.setBirth(studentDetail.getBirth());
 		student.setBloodType(studentDetail.getBloodType());
 		student.setTutor(studentDetail.getTutor());
-		List<Schedule> schedules = new ArrayList<Schedule>();
-		studentDetail.getSchedules().forEach(s -> {
-			try {
-				Schedule schedule = scheduleRepository.findById(s)
-						.orElseThrow(() -> new Exception("Schedule not exist with id: " + s));
-				schedules.add(schedule);
-			} catch (Exception e) {
-				logger.error("{} - error to fill schedule list, {}", METHOD_NAME, e);
-			}
-		});
-		student.setSchedules(schedules);
+		Schedule schedule = scheduleRepository.findById(studentDetail.getSchedule())
+				.orElseThrow(() -> new Exception("Schedule not exist with id: " + studentDetail.getSchedule()));
+		student.setSchedule(schedule);
+		Kyu kyu = kyuRepository.findById(studentDetail.getKyuId())
+				.orElseThrow(() -> new Exception("Kyu not exist with id: " + studentDetail.getKyuId()));
+		student.setKyu(kyu);
 
 		studentRepository.save(student);
 

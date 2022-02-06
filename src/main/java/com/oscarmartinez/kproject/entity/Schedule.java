@@ -23,9 +23,6 @@ public class Schedule {
 	private String days;
 	private String ageRange;
 	
-	@ManyToMany(mappedBy = "schedules")
-	List<Student> students;
-	
 	public long getId() {
 		return id;
 	}
@@ -49,12 +46,6 @@ public class Schedule {
 	}
 	public void setAgeRange(String ageRange) {
 		this.ageRange = ageRange;
-	}
-	public List<Student> getStudents() {
-		return students;
-	}
-	public void setStudents(List<Student> students) {
-		this.students = students;
 	}
 	
 }

@@ -17,7 +17,8 @@ public class StudentDTO implements Serializable {
 	private Date birth;
 	private String bloodType;
 	private String tutor;
-	private List<Long> schedules;
+	private long schedule;
+	private long kyuId;
 
 	public long getId() {
 		return id;
@@ -75,12 +76,20 @@ public class StudentDTO implements Serializable {
 		this.tutor = tutor;
 	}
 
-	public List<Long> getSchedules() {
-		return schedules;
+	public long getKyuId() {
+		return kyuId;
 	}
 
-	public void setSchedules(List<Long> schedules) {
-		this.schedules = schedules;
+	public void setKyuId(long kyuId) {
+		this.kyuId = kyuId;
+	}
+
+	public long getSchedule() {
+		return schedule;
+	}
+
+	public void setSchedule(long schedule) {
+		this.schedule = schedule;
 	}
 
 }
