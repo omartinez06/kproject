@@ -1,6 +1,5 @@
 package com.oscarmartinez.kproject.entity;
 
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -12,38 +11,45 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class Schedule {
+public class User {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private long id;
-	private String schedule;
-	private String days;
-	private String ageRange;
-	
+	private String user;
+	private String password;
+	private String name;
+
 	public long getId() {
 		return id;
 	}
+
 	public void setId(long id) {
 		this.id = id;
 	}
-	public String getSchedule() {
-		return schedule;
+
+	public String getUser() {
+		return user;
 	}
-	public void setSchedule(String schedule) {
-		this.schedule = schedule;
+
+	public void setUser(String user) {
+		this.user = user;
 	}
-	public String getDays() {
-		return days;
+
+	public String getPassword() {
+		return password;
 	}
-	public void setDays(String days) {
-		this.days = days;
+
+	public void setPassword(String password) {
+		this.password = password;
 	}
-	public String getAgeRange() {
-		return ageRange;
+
+	public String getName() {
+		return name;
 	}
-	public void setAgeRange(String ageRange) {
-		this.ageRange = ageRange;
+
+	public void setName(String name) {
+		this.name = name;
 	}
-	
+
 }
