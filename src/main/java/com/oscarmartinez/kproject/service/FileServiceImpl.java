@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.annotation.processing.FilerException;
 
@@ -34,8 +36,23 @@ public class FileServiceImpl implements IFileService {
 			file.mkdir();
 	}
 
+	public void deleteIfExist(String fileName) throws IOException {
+		List<String> extension = getExtensions();
+		for (String ext : extension) {
+			final Path filePath = Paths.get(imageDirectory).toAbsolutePath().normalize().resolve(fileName + ext)
+					.normalize();
+			log.info("download" + filePath.toString());
+			final Resource resource = new UrlResource(filePath.toUri());
+			if (resource.exists()) {
+				File file = resource.getFile();
+				file.delete();
+			}
+		}
+	}
+
 	public String storeFile(final MultipartFile file, String name) throws Exception {
 		log.info(imageDirectory);
+		deleteIfExist(name);
 		final Path fileStorageLocation = Paths.get(imageDirectory).toAbsolutePath().normalize();
 		log.info(fileStorageLocation.toString());
 		final String fileName = StringUtils.cleanPath(name.concat(file.getOriginalFilename()
@@ -62,16 +79,28 @@ public class FileServiceImpl implements IFileService {
 		return ResponseEntity.ok(file.getOriginalFilename());
 	}
 
+	public List<String> getExtensions() {
+		List<String> extension = new ArrayList<String>();
+		extension.add(".png");
+		extension.add(".jpg");
+		extension.add(".jpeg");
+
+		return extension;
+	}
+
 	public Resource loadFileAsResource(final String fileName) throws FileNotFoundException {
 		try {
-			final Path filePath = Paths.get(imageDirectory).toAbsolutePath().normalize().resolve(fileName).normalize();
-			log.info("download" + filePath.toString());
-			final Resource resource = new UrlResource(filePath.toUri());
-			if (resource.exists()) {
-				return resource;
-			} else {
-				throw new FileNotFoundException("Archivo no encontrado " + fileName);
+			List<String> extension = getExtensions();
+			for (String ext : extension) {
+				final Path filePath = Paths.get(imageDirectory).toAbsolutePath().normalize().resolve(fileName + ext)
+						.normalize();
+				log.info("download" + filePath.toString());
+				final Resource resource = new UrlResource(filePath.toUri());
+				if (resource.exists()) {
+					return resource;
+				}
 			}
+			throw new FileNotFoundException("Archivo no encontrado " + fileName);
 		} catch (final MalformedURLException ex) {
 			throw new FileNotFoundException("Archivo no encontrado " + fileName);
 		}
