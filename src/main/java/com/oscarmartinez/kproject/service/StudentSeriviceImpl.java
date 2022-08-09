@@ -42,7 +42,6 @@ public class StudentSeriviceImpl implements IStudentService {
 
 	@Override
 	public void addStudent(StudentDTO student) throws Exception {
-		final String METHOD_NAME = "addStudent()";
 		Student newStudent = new Student();
 		newStudent.setName(student.getName());
 		newStudent.setLastName(student.getLastName());
@@ -50,6 +49,7 @@ public class StudentSeriviceImpl implements IStudentService {
 		newStudent.setBirth(student.getBirth());
 		newStudent.setBloodType(student.getBloodType());
 		newStudent.setTutor(student.getTutor());
+		newStudent.setQuota(student.getQuota());
 		Schedule schedule = scheduleRepository.findById(student.getSchedule())
 				.orElseThrow(() -> new Exception("Schedule not exist with id: " + student.getSchedule()));
 		newStudent.setSchedule(schedule);
@@ -62,7 +62,6 @@ public class StudentSeriviceImpl implements IStudentService {
 
 	@Override
 	public ResponseEntity<Student> editStudent(long id, StudentDTO studentDetail) throws Exception {
-		final String METHOD_NAME = "editStudent()";
 		Student student = studentRepository.findById(id)
 				.orElseThrow(() -> new Exception("Student not exist with id: " + id));
 		student.setName(studentDetail.getName());
@@ -71,6 +70,7 @@ public class StudentSeriviceImpl implements IStudentService {
 		student.setBirth(studentDetail.getBirth());
 		student.setBloodType(studentDetail.getBloodType());
 		student.setTutor(studentDetail.getTutor());
+		student.setQuota(studentDetail.getQuota());
 		Schedule schedule = scheduleRepository.findById(studentDetail.getSchedule())
 				.orElseThrow(() -> new Exception("Schedule not exist with id: " + studentDetail.getSchedule()));
 		student.setSchedule(schedule);

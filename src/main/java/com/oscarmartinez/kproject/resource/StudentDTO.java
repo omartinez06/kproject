@@ -17,6 +17,7 @@ public class StudentDTO implements Serializable {
 	private Date birth;
 	private String bloodType;
 	private String tutor;
+	private String quota;
 	private long schedule;
 	private long kyuId;
 
@@ -74,6 +75,14 @@ public class StudentDTO implements Serializable {
 
 	public void setTutor(String tutor) {
 		this.tutor = tutor;
+	}
+
+	public String getQuota() {
+		return quota;
+	}
+
+	public void setQuota(String quota) {
+		this.quota = quota;
 	}
 
 	public long getKyuId() {

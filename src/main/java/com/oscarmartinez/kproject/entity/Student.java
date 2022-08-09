@@ -8,6 +8,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinTable;
+import javax.persistence.Lob;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -29,10 +30,11 @@ public class Student {
 	private Date birth;
 	private String bloodType;
 	private String tutor;
+	private String quota;
 
 	@ManyToOne
 	private Schedule schedule;
-	
+
 	@ManyToOne
 	private Kyu kyu;
 
@@ -90,6 +92,14 @@ public class Student {
 
 	public void setTutor(String tutor) {
 		this.tutor = tutor;
+	}
+
+	public String getQuota() {
+		return quota;
+	}
+
+	public void setQuota(String quota) {
+		this.quota = quota;
 	}
 
 	public Schedule getSchedule() {
