@@ -7,10 +7,16 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@Builder
 @Entity
 public class Schedule {
 
@@ -20,30 +26,5 @@ public class Schedule {
 	private String schedule;
 	private String days;
 	private String ageRange;
-	
-	public long getId() {
-		return id;
-	}
-	public void setId(long id) {
-		this.id = id;
-	}
-	public String getSchedule() {
-		return schedule;
-	}
-	public void setSchedule(String schedule) {
-		this.schedule = schedule;
-	}
-	public String getDays() {
-		return days;
-	}
-	public void setDays(String days) {
-		this.days = days;
-	}
-	public String getAgeRange() {
-		return ageRange;
-	}
-	public void setAgeRange(String ageRange) {
-		this.ageRange = ageRange;
-	}
 	
 }

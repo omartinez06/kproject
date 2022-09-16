@@ -1,5 +1,7 @@
 package com.oscarmartinez.kproject.entity;
 
+import java.util.Date;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -7,12 +9,16 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.Date;
+import lombok.Setter;
 
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
+@Builder
 @Entity
 public class Trainer {
 
@@ -23,47 +29,8 @@ public class Trainer {
 	private String lastName;
 	private String dpi;
 	private Date birth;
-	
+
 	@ManyToOne
 	private Kyu kyu;
-	
-	
-	public long getId() {
-		return id;
-	}
-	public void setId(long id) {
-		this.id = id;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	public String getLastName() {
-		return lastName;
-	}
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
-	public String getDpi() {
-		return this.dpi;
-	}
-	public void setDpi(String dpi) {
-		this.dpi = dpi;
-	}
-	public Date getBirth() {
-		return birth;
-	}
-	public void setBirth(Date birth) {
-		this.birth = birth;
-	}
-	public Kyu getKyu() {
-		return kyu;
-	}
-	public void setKyu(Kyu kyu) {
-		this.kyu = kyu;
-	}
-	
-	
+
 }

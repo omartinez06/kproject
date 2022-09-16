@@ -6,10 +6,16 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
+@Builder
 @Entity
 public class Kyu {
 	
@@ -17,18 +23,5 @@ public class Kyu {
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private long id;
 	private String kyu;	
-	
-	public long getId() {
-		return id;
-	}
-	public void setId(long id) {
-		this.id = id;
-	}
-	public String getKyu() {
-		return kyu;
-	}
-	public void setKyu(String kyu) {
-		this.kyu = kyu;
-	}
 
 }
