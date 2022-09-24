@@ -9,9 +9,11 @@ import org.springframework.stereotype.Service;
 
 import com.oscarmartinez.kproject.entity.Kyu;
 import com.oscarmartinez.kproject.entity.Trainer;
+import com.oscarmartinez.kproject.repository.IGymRepository;
 import com.oscarmartinez.kproject.repository.IKyuRepository;
 import com.oscarmartinez.kproject.repository.ITrainerRepository;
 import com.oscarmartinez.kproject.resource.TrainerDTO;
+import com.oscarmartinez.kproject.security.JwtProvider;
 
 @Service
 public class TrainerServiceImpl implements ITrainerService {
@@ -21,6 +23,13 @@ public class TrainerServiceImpl implements ITrainerService {
 
 	@Autowired
 	private IKyuRepository kyuRepo;
+	
+	@Autowired
+	private JwtProvider jwtProvider;
+
+	@Autowired
+	private IGymRepository gymRepository;
+
 
 	@Override
 	public void addTrainer(TrainerDTO trainer) throws Exception {
@@ -32,12 +41,13 @@ public class TrainerServiceImpl implements ITrainerService {
 		newTrainer.setKyu(kyu);
 		newTrainer.setName(trainer.getName());
 		newTrainer.setLastName(trainer.getLastName());
+		newTrainer.setGym(gymRepository.findByGymUser(jwtProvider.getUserName()));
 		trainerRepo.save(newTrainer);
 	}
 
 	@Override
 	public List<Trainer> listTrainers() {
-		return trainerRepo.findAll();
+		return trainerRepo.findByGym(gymRepository.findByGymUser(jwtProvider.getUserName()));
 	}
 
 	@Override

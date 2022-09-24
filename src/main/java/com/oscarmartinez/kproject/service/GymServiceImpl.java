@@ -65,6 +65,7 @@ public class GymServiceImpl implements IGymService {
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 		String jwt = jwtProvider.generateJwtToken(authentication);
 		UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+		log.debug("{} logged user: {}", "authenticateUser", jwtProvider.getUserName());
 		return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getUsername(), userDetails.getAuthorities(), jwtProvider.getJwtTokenExpiration(jwt)));
 	}
 

@@ -8,21 +8,30 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.oscarmartinez.kproject.entity.Kyu;
+import com.oscarmartinez.kproject.repository.IGymRepository;
 import com.oscarmartinez.kproject.repository.IKyuRepository;
+import com.oscarmartinez.kproject.security.JwtProvider;
 
 @Service
 public class KyuServiceImpl implements IKyuService {
 
 	@Autowired
 	private IKyuRepository kyuRepo;
+	
+	@Autowired
+	private JwtProvider jwtProvider;
+
+	@Autowired
+	private IGymRepository gymRepository;
 
 	@Override
 	public List<Kyu> listKyus() {
-		return kyuRepo.findAll();
+		return kyuRepo.findByGym(gymRepository.findByGymUser(jwtProvider.getUserName()));
 	}
 
 	@Override
 	public void addKyu(Kyu kyu) {
+		kyu.setGym(gymRepository.findByGymUser(jwtProvider.getUserName()));
 		kyuRepo.save(kyu);
 	}
 

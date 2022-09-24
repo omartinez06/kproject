@@ -6,6 +6,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import lombok.AllArgsConstructor;
@@ -32,5 +33,9 @@ public class Trainer {
 
 	@ManyToOne
 	private Kyu kyu;
+	
+	@ManyToOne
+	@JoinColumn(name = "gym_id")
+	private Gym gym;
 
 }

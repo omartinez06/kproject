@@ -13,10 +13,12 @@ import org.springframework.stereotype.Service;
 import com.oscarmartinez.kproject.entity.Kyu;
 import com.oscarmartinez.kproject.entity.Schedule;
 import com.oscarmartinez.kproject.entity.Student;
+import com.oscarmartinez.kproject.repository.IGymRepository;
 import com.oscarmartinez.kproject.repository.IKyuRepository;
 import com.oscarmartinez.kproject.repository.IScheduleRepository;
 import com.oscarmartinez.kproject.repository.IStudentRepository;
 import com.oscarmartinez.kproject.resource.StudentDTO;
+import com.oscarmartinez.kproject.security.JwtProvider;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,9 +37,15 @@ public class StudentSeriviceImpl implements IStudentService {
 	@Autowired
 	private IKyuRepository kyuRepository;
 
+	@Autowired
+	private JwtProvider jwtProvider;
+
+	@Autowired
+	private IGymRepository gymRepository;
+
 	@Override
 	public List<Student> listStudents() {
-		return studentRepository.findAll();
+		return studentRepository.findByGym(gymRepository.findByGymUser(jwtProvider.getUserName()));
 	}
 
 	@Override
@@ -50,6 +58,7 @@ public class StudentSeriviceImpl implements IStudentService {
 		newStudent.setBloodType(student.getBloodType());
 		newStudent.setTutor(student.getTutor());
 		newStudent.setQuota(student.getQuota());
+		newStudent.setGym(gymRepository.findByGymUser(jwtProvider.getUserName()));
 		Schedule schedule = scheduleRepository.findById(student.getSchedule())
 				.orElseThrow(() -> new Exception("Schedule not exist with id: " + student.getSchedule()));
 		newStudent.setSchedule(schedule);
