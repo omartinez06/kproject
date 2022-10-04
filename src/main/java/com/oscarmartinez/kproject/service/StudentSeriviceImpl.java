@@ -57,7 +57,7 @@ public class StudentSeriviceImpl implements IStudentService {
 		newStudent.setBirth(student.getBirth());
 		newStudent.setBloodType(student.getBloodType());
 		newStudent.setTutor(student.getTutor());
-		newStudent.setQuota(student.getQuota());
+		newStudent.setQuota(Integer.parseInt(student.getQuota()));
 		newStudent.setGym(gymRepository.findByGymUser(jwtProvider.getUserName()));
 		Schedule schedule = scheduleRepository.findById(student.getSchedule())
 				.orElseThrow(() -> new Exception("Schedule not exist with id: " + student.getSchedule()));
@@ -79,7 +79,7 @@ public class StudentSeriviceImpl implements IStudentService {
 		student.setBirth(studentDetail.getBirth());
 		student.setBloodType(studentDetail.getBloodType());
 		student.setTutor(studentDetail.getTutor());
-		student.setQuota(studentDetail.getQuota());
+		student.setQuota(Integer.parseInt(studentDetail.getQuota()));
 		Schedule schedule = scheduleRepository.findById(studentDetail.getSchedule())
 				.orElseThrow(() -> new Exception("Schedule not exist with id: " + studentDetail.getSchedule()));
 		student.setSchedule(schedule);

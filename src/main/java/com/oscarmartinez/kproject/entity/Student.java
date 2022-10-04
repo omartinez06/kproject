@@ -32,7 +32,7 @@ public class Student {
 	private Date birth;
 	private String bloodType;
 	private String tutor;
-	private String quota;
+	private int quota;
 
 	@ManyToOne
 	private Schedule schedule;
