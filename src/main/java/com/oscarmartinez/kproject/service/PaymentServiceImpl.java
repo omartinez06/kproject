@@ -11,9 +11,11 @@ import org.springframework.stereotype.Service;
 
 import com.oscarmartinez.kproject.entity.Payment;
 import com.oscarmartinez.kproject.entity.Student;
+import com.oscarmartinez.kproject.repository.IGymRepository;
 import com.oscarmartinez.kproject.repository.IPaymentRepository;
 import com.oscarmartinez.kproject.repository.IStudentRepository;
 import com.oscarmartinez.kproject.resource.PaymentDTO;
+import com.oscarmartinez.kproject.security.JwtProvider;
 
 @Service
 public class PaymentServiceImpl implements IPaymentService {
@@ -25,10 +27,16 @@ public class PaymentServiceImpl implements IPaymentService {
 
 	@Autowired
 	private IStudentRepository studentRepo;
+	
+	@Autowired
+	private IGymRepository gymRepository;
+	
+	@Autowired
+	private JwtProvider jwtProvider;
 
 	@Override
 	public List<Payment> listPayments() {
-		return paymentRepo.findAll();
+		return paymentRepo.findByGym(gymRepository.findByGymUser(jwtProvider.getUserName()));
 	}
 
 	@Override
@@ -39,6 +47,7 @@ public class PaymentServiceImpl implements IPaymentService {
 		newPayment.setPaymentDate(payment.getPaymentDate());
 		newPayment.setValue(payment.getValue());
 		newPayment.setLatePayment(payment.isLatePayment());
+		newPayment.setGym(gymRepository.findByGymUser(jwtProvider.getUserName()));
 		Student student = studentRepo.findById(payment.getStudentId())
 				.orElseThrow(() -> new Exception("Student not exist with id " + payment.getStudentId()));
 		newPayment.setStudent(student);

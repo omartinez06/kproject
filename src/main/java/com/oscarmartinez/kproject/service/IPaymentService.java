@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import com.oscarmartinez.kproject.entity.Payment;
 import com.oscarmartinez.kproject.resource.PaymentDTO;
+import com.oscarmartinez.kproject.resource.PaymentReportDTO;
 
 public interface IPaymentService {
 

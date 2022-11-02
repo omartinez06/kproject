@@ -108,4 +108,11 @@ public class StudentSeriviceImpl implements IStudentService {
 		return ResponseEntity.ok(student);
 	}
 
+	@Override
+	public ResponseEntity<Long> getStudentsQuantity() throws Exception {
+		long students = studentRepository.count();
+		log.debug("Estudiantes: " + students);
+		return ResponseEntity.ok(students);
+	}
+
 }

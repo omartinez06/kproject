@@ -19,6 +19,8 @@ import com.oscarmartinez.kproject.entity.Gym;
 import com.oscarmartinez.kproject.entity.Role;
 import com.oscarmartinez.kproject.repository.IGymRepository;
 import com.oscarmartinez.kproject.repository.IRoleRepository;
+import com.oscarmartinez.kproject.repository.IStudentRepository;
+import com.oscarmartinez.kproject.repository.ITrainerRepository;
 import com.oscarmartinez.kproject.resource.GymDTO;
 import com.oscarmartinez.kproject.resource.JwtResponse;
 import com.oscarmartinez.kproject.resource.LoginDTO;
@@ -40,6 +42,12 @@ public class GymServiceImpl implements IGymService {
 
 	@Autowired
 	private IRoleRepository roleRepository;
+	
+	@Autowired
+	private IStudentRepository studentRepository;
+	
+	@Autowired
+	private ITrainerRepository trainersRepository;
 
 	@Autowired
 	private JwtProvider jwtProvider;

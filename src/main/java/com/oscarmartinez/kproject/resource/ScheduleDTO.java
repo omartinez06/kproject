@@ -38,5 +38,4 @@ public class ScheduleDTO implements Serializable {
 	public void setAgeRange(String ageRange) {
 		this.ageRange = ageRange;
 	}
-
 }

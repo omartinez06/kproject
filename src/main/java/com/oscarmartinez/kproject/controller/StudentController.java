@@ -53,4 +53,9 @@ public class StudentController {
 		return studentService.getStudentById(id);
 	}
 
+	@GetMapping("/quantity")
+	public ResponseEntity<Long> getStudentsQuantity() throws Exception {
+		return studentService.getStudentsQuantity();
+	}
+
 }

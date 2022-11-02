@@ -19,5 +19,7 @@ public interface IStudentService {
 	ResponseEntity<HttpStatus> deleteStudent(long id) throws Exception;
 
 	ResponseEntity<Student> getStudentById(long id) throws Exception;
+	
+	ResponseEntity<Long> getStudentsQuantity() throws Exception;
 
 }

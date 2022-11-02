@@ -17,7 +17,6 @@ import com.oscarmartinez.kproject.security.JwtProvider;
 
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 public class ScheduleServiceImpl implements IScheduleService {
 

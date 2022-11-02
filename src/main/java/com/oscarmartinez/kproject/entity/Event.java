@@ -21,21 +21,17 @@ import lombok.Setter;
 @Setter
 @Builder
 @Entity
-public class Payment {
-
+public class Event {
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private long id;
-	private Date paymentDate;
-	private String depositTicket;
-	private String month;
-	private int value;
-	private boolean latePayment;
-
-	@ManyToOne
-	private Student student;
+	private String name;
+	private Date initialDate;
+	private Date finalDate;
 	
 	@ManyToOne
 	@JoinColumn(name = "gym_id")
 	private Gym gym;
+
 }

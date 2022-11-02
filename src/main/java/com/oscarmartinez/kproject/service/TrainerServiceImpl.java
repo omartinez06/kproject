@@ -83,4 +83,10 @@ public class TrainerServiceImpl implements ITrainerService {
 		return ResponseEntity.ok(trainer);
 	}
 
+	@Override
+	public ResponseEntity<Long> getTrainersQuantity() throws Exception {
+		long trainers = trainerRepo.count();
+		return ResponseEntity.ok(trainers);
+	}
+
 }

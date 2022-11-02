@@ -19,5 +19,7 @@ public interface ITrainerService {
 	ResponseEntity<HttpStatus> deleteTrainer(long id) throws Exception;
 
 	ResponseEntity<Trainer> getTrainerById(long id) throws Exception;
+	
+	ResponseEntity<Long> getTrainersQuantity() throws Exception;
 
 }

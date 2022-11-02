@@ -53,5 +53,10 @@ public class TrainerController {
 	public ResponseEntity<Trainer> getTrainerById(@PathVariable long id) throws Exception {
 		return trainerService.getTrainerById(id);
 	}
+	
+	@GetMapping("/quantity")
+	public ResponseEntity<Long> getTrainersQuantity() throws Exception {
+		return trainerService.getTrainersQuantity();
+	}
 
 }

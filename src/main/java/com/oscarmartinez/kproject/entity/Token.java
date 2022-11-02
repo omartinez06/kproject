@@ -6,8 +6,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,21 +19,13 @@ import lombok.Setter;
 @Setter
 @Builder
 @Entity
-public class Payment {
-
+public class Token {
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private long id;
-	private Date paymentDate;
-	private String depositTicket;
-	private String month;
-	private int value;
-	private boolean latePayment;
+	private String token;
+	private Date validFrom;
+	private Date validUntil;
 
-	@ManyToOne
-	private Student student;
-	
-	@ManyToOne
-	@JoinColumn(name = "gym_id")
-	private Gym gym;
 }
