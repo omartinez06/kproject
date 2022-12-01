@@ -1,7 +1,8 @@
 package com.oscarmartinez.kproject.service;
 
-import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Random;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +48,26 @@ public class StudentSeriviceImpl implements IStudentService {
 	public List<Student> listStudents() {
 		return studentRepository.findByGym(gymRepository.findByGymUser(jwtProvider.getUserName()));
 	}
+	
+	public String getLicenseId() {
+		Random r = new Random();
+		String license = "";
+        boolean exit = true;
+        while(exit) {
+        	StringBuffer sb = new StringBuffer();
+            while(sb.length() < 3){
+                sb.append(Integer.toHexString(r.nextInt()));
+            }
+            int year = Calendar.getInstance().get(Calendar.YEAR);
+            license = year + sb.toString().toUpperCase();
+            Student student = studentRepository.findByLicense(license);
+            if(student == null)
+            	exit = false;
+        }
+        
+        
+        return license;
+	}
 
 	@Override
 	public void addStudent(StudentDTO student) throws Exception {
@@ -59,6 +80,7 @@ public class StudentSeriviceImpl implements IStudentService {
 		newStudent.setTutor(student.getTutor());
 		newStudent.setQuota(Integer.parseInt(student.getQuota()));
 		newStudent.setGym(gymRepository.findByGymUser(jwtProvider.getUserName()));
+		newStudent.setLicense(getLicenseId());
 		Schedule schedule = scheduleRepository.findById(student.getSchedule())
 				.orElseThrow(() -> new Exception("Schedule not exist with id: " + student.getSchedule()));
 		newStudent.setSchedule(schedule);
@@ -113,6 +135,11 @@ public class StudentSeriviceImpl implements IStudentService {
 		long students = studentRepository.count();
 		log.debug("Estudiantes: " + students);
 		return ResponseEntity.ok(students);
+	}
+
+	@Override
+	public Student getStudentByLicense(String license) throws Exception {
+		return studentRepository.findByLicense(license);
 	}
 
 }

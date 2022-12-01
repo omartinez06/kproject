@@ -1,6 +1,5 @@
 package com.oscarmartinez.kproject.controller;
 
-import java.text.SimpleDateFormat;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +50,11 @@ public class EventController {
 	@GetMapping("{id}")
 	public ResponseEntity<Event> getEventById(@PathVariable long id) throws Exception {
 		return eventService.getEventById(id);
+	}
+	
+	@GetMapping("/next/{license}")
+	public List<Event> getNextEvents(@PathVariable String license) throws Exception {
+		return eventService.getNextEvents(license);
 	}
 
 }

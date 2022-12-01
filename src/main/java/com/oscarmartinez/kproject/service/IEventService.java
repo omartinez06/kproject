@@ -19,5 +19,7 @@ public interface IEventService {
 	ResponseEntity<HttpStatus> deleteEvent(long id) throws Exception;
 
 	ResponseEntity<Event> getEventById(long id) throws Exception;
+	
+	List<Event> getNextEvents(String license) throws Exception;
 
 }

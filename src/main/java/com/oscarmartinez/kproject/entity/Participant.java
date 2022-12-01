@@ -1,12 +1,9 @@
 package com.oscarmartinez.kproject.entity;
 
-import java.util.Date;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import lombok.AllArgsConstructor;
@@ -21,17 +18,21 @@ import lombok.Setter;
 @Setter
 @Builder
 @Entity
-public class Token {
+public class Participant {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private long id;
-	private String token;
-	private Date validFrom;
-	private Date validUntil;
+	private String name;
+	private String lastName;
+	private String address;
+	private String phone;
+	private String bloodType;
+	private String dojo;
+	private String country;
 	
 	@ManyToOne
-	@JoinColumn(name = "event_id")
-	private Event event;
+	private Category category;
+
 
 }

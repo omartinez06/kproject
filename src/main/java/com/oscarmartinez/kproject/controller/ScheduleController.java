@@ -52,5 +52,10 @@ public class ScheduleController {
 	public ResponseEntity<Schedule> getScheduleById(@PathVariable long id) throws Exception {
 		return scheduleService.getScheduleById(id);
 	}
+	
+	@GetMapping("/quantity")
+	public ResponseEntity<Long> getScheduleQuantity() throws Exception {
+		return scheduleService.getScheduleQuantity();
+	}
 
 }

@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.oscarmartinez.kproject.entity.Payment;
+import com.oscarmartinez.kproject.resource.PaymentBotDTO;
 import com.oscarmartinez.kproject.resource.PaymentDTO;
+import com.oscarmartinez.kproject.resource.ReportMonthDTO;
 import com.oscarmartinez.kproject.service.PaymentServiceImpl;
 
 @CrossOrigin("*")
@@ -50,6 +52,16 @@ public class PaymentController {
 	@GetMapping("{id}")
 	public ResponseEntity<Payment> getPaymentById(@PathVariable long id) throws Exception {
 		return paymentService.getPaymentById(id);
+	}
+	
+	@GetMapping("/report")
+	public List<ReportMonthDTO> getPaymentPerMoth() throws Exception {
+		return paymentService.getPaymentPerMoth();
+	}
+	
+	@PostMapping("/paybot")
+	public void registerBotPayment(@RequestBody PaymentBotDTO payment) throws Exception {
+		paymentService.registerBotPayment(payment);
 	}
 
 }

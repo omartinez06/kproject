@@ -5,8 +5,9 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import com.oscarmartinez.kproject.entity.Payment;
+import com.oscarmartinez.kproject.resource.PaymentBotDTO;
 import com.oscarmartinez.kproject.resource.PaymentDTO;
-import com.oscarmartinez.kproject.resource.PaymentReportDTO;
+import com.oscarmartinez.kproject.resource.ReportMonthDTO;
 
 public interface IPaymentService {
 
@@ -19,4 +20,8 @@ public interface IPaymentService {
 	ResponseEntity<HttpStatus> deletePayment(long id) throws Exception;
 
 	ResponseEntity<Payment> getPaymentById(long id) throws Exception;
+	
+	List<ReportMonthDTO> getPaymentPerMoth() throws Exception;
+	
+	void registerBotPayment(PaymentBotDTO payment) throws Exception;
 }

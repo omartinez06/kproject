@@ -1,5 +1,7 @@
 package com.oscarmartinez.kproject.service;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,10 +11,13 @@ import org.springframework.stereotype.Service;
 
 import com.oscarmartinez.kproject.entity.Category;
 import com.oscarmartinez.kproject.entity.Event;
+import com.oscarmartinez.kproject.entity.Student;
 import com.oscarmartinez.kproject.repository.ICategoryReponsitory;
 import com.oscarmartinez.kproject.repository.IEventRepository;
 import com.oscarmartinez.kproject.repository.IGymRepository;
+import com.oscarmartinez.kproject.repository.IStudentRepository;
 import com.oscarmartinez.kproject.resource.EventDTO;
+import com.oscarmartinez.kproject.resource.ParticipantDTO;
 import com.oscarmartinez.kproject.security.JwtProvider;
 
 @Service
@@ -23,6 +28,9 @@ public class EventServiceImpl implements IEventService {
 
 	@Autowired
 	private ICategoryReponsitory categoryRepository;
+	
+	@Autowired
+	private IStudentRepository studentRepository;
 
 	@Autowired
 	private JwtProvider jwtProvider;
@@ -79,6 +87,19 @@ public class EventServiceImpl implements IEventService {
 	public ResponseEntity<Event> getEventById(long id) throws Exception {
 		Event event = eventRepository.findById(id).orElseThrow(() -> new Exception("Event not exist with id: " + id));
 		return ResponseEntity.ok(event);
+	}
+
+	@Override
+	public List<Event> getNextEvents(String license) throws Exception {
+		Student student = studentRepository.findByLicense(license);
+		List<Event> events = eventRepository.findByGym(student.getGym());
+		List<Event> response = new ArrayList<Event>();
+		events.forEach((event) -> {
+			if(event.getInitialDate().after(new Date())) {
+				response.add(event);
+			}
+		});
+		return response;
 	}
 
 }

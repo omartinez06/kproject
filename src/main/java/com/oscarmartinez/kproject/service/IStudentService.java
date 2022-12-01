@@ -21,5 +21,7 @@ public interface IStudentService {
 	ResponseEntity<Student> getStudentById(long id) throws Exception;
 	
 	ResponseEntity<Long> getStudentsQuantity() throws Exception;
+	
+	Student getStudentByLicense(String license) throws Exception;
 
 }

@@ -19,5 +19,7 @@ public interface IScheduleService {
 	ResponseEntity<HttpStatus> deleteSchedule(long id) throws Exception;
 
 	ResponseEntity<Schedule> getScheduleById(long id) throws Exception;
+	
+	ResponseEntity<Long> getScheduleQuantity() throws Exception;
 
 }

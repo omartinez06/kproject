@@ -75,4 +75,11 @@ public class ScheduleServiceImpl implements IScheduleService {
 		return ResponseEntity.ok(schedule);
 	}
 
+	@Override
+	public ResponseEntity<Long> getScheduleQuantity() throws Exception {
+		long schedules = scheduleRepo.count();
+		log.debug("Horarios: " + schedules);
+		return ResponseEntity.ok(schedules);
+	}
+
 }

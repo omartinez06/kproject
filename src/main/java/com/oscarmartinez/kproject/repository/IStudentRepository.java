@@ -12,5 +12,7 @@ import com.oscarmartinez.kproject.entity.Student;
 public interface IStudentRepository extends JpaRepository<Student, Long> {
 	
 	public List<Student> findByGym(Gym gym);
+	
+	public Student findByLicense(String license);
 
 }

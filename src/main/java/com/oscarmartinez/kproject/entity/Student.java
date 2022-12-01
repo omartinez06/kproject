@@ -33,6 +33,7 @@ public class Student {
 	private String bloodType;
 	private String tutor;
 	private int quota;
+	private String license;
 
 	@ManyToOne
 	private Schedule schedule;

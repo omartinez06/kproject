@@ -57,5 +57,10 @@ public class StudentController {
 	public ResponseEntity<Long> getStudentsQuantity() throws Exception {
 		return studentService.getStudentsQuantity();
 	}
+	
+	@GetMapping("/license/{license}")
+	public Student getStudentByLicense(@PathVariable String license) throws Exception {
+		return studentService.getStudentByLicense(license);
+	}
 
 }
