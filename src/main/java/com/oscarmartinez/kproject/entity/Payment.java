@@ -31,6 +31,7 @@ public class Payment {
 	private String month;
 	private int value;
 	private boolean latePayment;
+	private boolean valid;
 
 	@ManyToOne
 	private Student student;

@@ -63,5 +63,10 @@ public class PaymentController {
 	public void registerBotPayment(@RequestBody PaymentBotDTO payment) throws Exception {
 		paymentService.registerBotPayment(payment);
 	}
+	
+	@PutMapping("/valid/{id}")
+	public void validatePayment(@PathVariable long id) throws Exception {
+		paymentService.validPayment(id);
+	}
 
 }

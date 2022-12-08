@@ -29,6 +29,7 @@ public class Event {
 	private String name;
 	private Date initialDate;
 	private Date finalDate;
+	private String url;
 	
 	@ManyToOne
 	@JoinColumn(name = "gym_id")

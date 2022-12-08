@@ -24,4 +24,6 @@ public interface IPaymentService {
 	List<ReportMonthDTO> getPaymentPerMoth() throws Exception;
 	
 	void registerBotPayment(PaymentBotDTO payment) throws Exception;
+	
+	void validPayment(long id) throws Exception;
 }

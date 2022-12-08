@@ -58,6 +58,7 @@ public class PaymentServiceImpl implements IPaymentService {
 		Student student = studentRepo.findById(payment.getStudentId())
 				.orElseThrow(() -> new Exception("Student not exist with id " + payment.getStudentId()));
 		newPayment.setStudent(student);
+		newPayment.setValid(true);
 
 		paymentRepo.save(newPayment);
 	}
@@ -112,7 +113,7 @@ public class PaymentServiceImpl implements IPaymentService {
 
 	@Override
 	public List<ReportMonthDTO> getPaymentPerMoth() throws Exception {
-		List<Payment> payments = paymentRepo.findAll();
+		List<Payment> payments = paymentRepo.findByGym(gymRepository.findByGymUser(jwtProvider.getUserName()));
 		List<ReportMonthDTO> response = new ArrayList<ReportMonthDTO>();
 		for (Payment payment : payments) {
 			if (existOnArray(response, payment.getMonth())) {
@@ -162,7 +163,16 @@ public class PaymentServiceImpl implements IPaymentService {
 		Student student = studentRepo.findByLicense(payment.getStudentLicense());
 		newPayment.setStudent(student);
 		newPayment.setGym(student.getGym());
+		newPayment.setValid(false);
 		paymentRepo.save(newPayment);
+	}
+
+	@Override
+	public void validPayment(long id) throws Exception {
+		Payment payment = paymentRepo.findById(id).orElseThrow(() -> new Exception("Payment not exist with id: " + id));
+		payment.setValid(true);
+		
+		paymentRepo.save(payment);
 	}
 
 }

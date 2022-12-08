@@ -85,8 +85,9 @@ public class TrainerServiceImpl implements ITrainerService {
 
 	@Override
 	public ResponseEntity<Long> getTrainersQuantity() throws Exception {
-		long trainers = trainerRepo.count();
-		return ResponseEntity.ok(trainers);
+		List<Trainer> trainers = trainerRepo.findByGym(gymRepository.findByGymUser(jwtProvider.getUserName()));
+		long count = trainers.size();
+		return ResponseEntity.ok(count);
 	}
 
 }

@@ -132,9 +132,10 @@ public class StudentSeriviceImpl implements IStudentService {
 
 	@Override
 	public ResponseEntity<Long> getStudentsQuantity() throws Exception {
-		long students = studentRepository.count();
-		log.debug("Estudiantes: " + students);
-		return ResponseEntity.ok(students);
+		List<Student> students = studentRepository.findByGym(gymRepository.findByGymUser(jwtProvider.getUserName()));
+		long count = students.size();
+		log.debug("Estudiantes: " + count);
+		return ResponseEntity.ok(count);
 	}
 
 	@Override

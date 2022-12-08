@@ -29,9 +29,10 @@ public class Token {
 	private String token;
 	private Date validFrom;
 	private Date validUntil;
+	private String url;
 	
 	@ManyToOne
-	@JoinColumn(name = "event_id")
-	private Event event;
+	@JoinColumn(name = "gym_id")
+	private Gym gym;
 
 }
