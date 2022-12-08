@@ -32,6 +32,7 @@ public class Payment {
 	private int value;
 	private boolean latePayment;
 	private boolean valid;
+	private String insertedBy;
 
 	@ManyToOne
 	private Student student;

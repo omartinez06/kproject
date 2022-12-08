@@ -12,9 +12,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.oscarmartinez.kproject.entity.Event;
+import com.oscarmartinez.kproject.entity.Student;
 import com.oscarmartinez.kproject.entity.Token;
 import com.oscarmartinez.kproject.repository.IEventRepository;
 import com.oscarmartinez.kproject.repository.IGymRepository;
+import com.oscarmartinez.kproject.repository.IStudentRepository;
 import com.oscarmartinez.kproject.repository.ITokenRepository;
 import com.oscarmartinez.kproject.security.JwtProvider;
 
@@ -33,10 +35,14 @@ public class TokenServiceImpl implements ITokenService {
 	private IGymRepository gymRepository;
 	
 	@Autowired
+	private IStudentRepository studentRepository;
+	
+	@Autowired
 	private JwtProvider jwtProvider;
 
 	@Override
 	public ResponseEntity<Token> generateToken() throws Exception {
+		deleteGymTokens();
 		Random r = new Random();
 		StringBuffer sb = new StringBuffer();
 		while (sb.length() < 25) {
@@ -53,6 +59,13 @@ public class TokenServiceImpl implements ITokenService {
 		token.setValidUntil(dt);
 		token.setGym(gymRepository.findByGymUser(jwtProvider.getUserName()));
 		return ResponseEntity.ok(token);
+	}
+	
+	public void deleteGymTokens() {
+		List<Token> tokens = tokenRepository.findByGym(gymRepository.findByGymUser(jwtProvider.getUserName()));
+		tokens.forEach(token -> {
+			tokenRepository.delete(token);
+		});
 	}
 
 	@Override
@@ -96,6 +109,28 @@ public class TokenServiceImpl implements ITokenService {
 			return null;
 		}
 		return tokens.get(0);
+	}
+
+	@Override
+	public String getTokenUrl(String token) throws Exception {
+		Token tokenFound = tokenRepository.findByToken(token);
+		if(token != null) {
+			return tokenFound.getUrl();
+		}
+		return "https://www.youtube.com/embed/tKrfJuQjTP4";
+	}
+
+	@Override
+	public String getTokenForBot(String studentLicense) throws Exception {
+		Student student = studentRepository.findByLicense(studentLicense);
+		List<Token> tokens = tokenRepository.findByGym(student.getGym());
+		if(!tokens.isEmpty()) {
+			if(tokens.get(0).getValidUntil().after(new Date())) {
+				return tokens.get(0).getToken();
+			}
+		}
+		
+		return null;
 	}
 
 }

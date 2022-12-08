@@ -59,6 +59,7 @@ public class PaymentServiceImpl implements IPaymentService {
 				.orElseThrow(() -> new Exception("Student not exist with id " + payment.getStudentId()));
 		newPayment.setStudent(student);
 		newPayment.setValid(true);
+		newPayment.setInsertedBy("ADMIN");
 
 		paymentRepo.save(newPayment);
 	}
@@ -164,6 +165,7 @@ public class PaymentServiceImpl implements IPaymentService {
 		newPayment.setStudent(student);
 		newPayment.setGym(student.getGym());
 		newPayment.setValid(false);
+		newPayment.setInsertedBy(payment.getInsertedBy());
 		paymentRepo.save(newPayment);
 	}
 

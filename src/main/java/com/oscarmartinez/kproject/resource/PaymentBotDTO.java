@@ -17,4 +17,5 @@ public class PaymentBotDTO implements Serializable {
 	private String depositTicket;
 	private int value;
 	private String studentLicense;
+	private String insertedBy;
 }

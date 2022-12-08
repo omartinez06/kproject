@@ -45,4 +45,14 @@ public class TokenController {
 	private Token getTokenInfo() throws Exception {
 		return tokenService.getTokenInfo();
 	}
+	
+	@GetMapping("/url/{token}")
+	private String getUrlEvent(@PathVariable String token) throws Exception {
+		return tokenService.getTokenUrl(token);
+	}
+	
+	@GetMapping("/bot/{studentLicense}")
+	private String getTokenForBot(@PathVariable String studentLicense) throws Exception {
+		return tokenService.getTokenForBot(studentLicense);
+	}
 }

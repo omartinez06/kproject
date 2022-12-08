@@ -15,5 +15,9 @@ public interface ITokenService {
 	ResponseEntity<Boolean> isAvailableEvent() throws Exception;
 	
 	Token getTokenInfo() throws Exception;
+	
+	String getTokenUrl(String token) throws Exception;
+	
+	String getTokenForBot(String studentLicense) throws Exception;
 
 }
