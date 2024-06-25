@@ -12,5 +12,6 @@ public class GymDTO {
 	private String manager;
 	private String user;
 	private String password;
+	private int latePayment; 
 	
 }

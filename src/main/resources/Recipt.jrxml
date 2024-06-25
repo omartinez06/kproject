@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 8.2.0.final using JasperReports Library version 6.20.3-415f9428cffdb6805c6f85bbb29ebaf18813a2ab  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Blank_Letter" printOrder="Horizontal" pageWidth="612" pageHeight="792" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="42fa6250-9bb5-4c9e-b4b7-b0790f86462c">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+	<parameter name="number" class="java.lang.String"/>
+	<parameter name="dateRecipt" class="java.lang.String"/>
+	<parameter name="client" class="java.lang.String"/>
+	<parameter name="description" class="java.lang.String"/>
+	<parameter name="reciptValue" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="89" splitType="Stretch">
+			<image>
+				<reportElement x="0" y="0" width="80" height="80" uuid="47a489de-edf5-4dc4-9344-5417323f2ff3"/>
+				<imageExpression><![CDATA["classpath:/images/shitokai.png"]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement x="131" y="29" width="310" height="30" uuid="59e12efd-9698-4f53-88e6-f7f710dae174"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="22" isBold="true"/>
+				</textElement>
+				<text><![CDATA[RECIBO CONTABLE]]></text>
+			</staticText>
+			<image>
+				<reportElement x="480" y="0" width="80" height="80" uuid="d08c2dee-5550-4fad-b0ef-a5a30d3db606"/>
+				<imageExpression><![CDATA["classpath:/images/shitokai.png"]]></imageExpression>
+			</image>
+		</band>
+	</title>
+	<detail>
+		<band height="145" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="180" height="20" uuid="9e73ab99-f2c4-4add-b3de-7202ab0615ca"/>
+				<textElement verticalAlignment="Middle">
+					<font size="13" isBold="true"/>
+				</textElement>
+				<text><![CDATA[FECHA DE EXPEDICION:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="180" y="0" width="120" height="20" uuid="a9e699c2-c8e6-4695-9116-9c1c4d6f9e27"/>
+				<textElement verticalAlignment="Middle">
+					<font size="13"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{dateRecipt}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="380" y="0" width="30" height="20" uuid="08c6d97b-7f61-44ae-a9ca-c593ba5e587e"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[No:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="410" y="1" width="110" height="20" forecolor="#FF0015" uuid="30ece578-c60f-43af-9a28-509154451563"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle" markup="html">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{number}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="20" width="110" height="20" uuid="641c2120-92e0-4a19-b4f0-ba0db236f84c"/>
+				<textElement verticalAlignment="Middle">
+					<font size="13" isBold="true"/>
+				</textElement>
+				<text><![CDATA[RECIBI DE:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="110" y="20" width="460" height="20" uuid="2b496f8d-8409-4232-86ce-3245899c0c57"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="13"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{client}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="40" width="170" height="20" uuid="8b9b9e48-e802-49cd-84f5-09c590ec5756"/>
+				<textElement verticalAlignment="Middle">
+					<font size="13" isBold="true"/>
+				</textElement>
+				<text><![CDATA[POR CONCEPTO DE:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="170" y="40" width="400" height="20" uuid="0310c6e1-32ce-4113-b51a-f171e2076d16"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="13"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{description}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="60" width="170" height="20" uuid="c118759e-40a6-4331-ae4d-55001d174841"/>
+				<textElement verticalAlignment="Middle">
+					<font size="13" isBold="true"/>
+				</textElement>
+				<text><![CDATA[POR VALOR DE:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="170" y="60" width="400" height="20" uuid="3385c35a-2c77-4541-8641-da2474f32763"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="13" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{reciptValue}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="349" y="80" width="211" height="45" uuid="8a3f6969-ee12-4dbb-ba47-43f8918a780f"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="21" isBold="true"/>
+				</textElement>
+				<text><![CDATA[DOJO KEN SEI KAI]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="369" y="110" width="170" height="20" uuid="0676ae46-9c59-4711-af76-b6fe611e5a48"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="13" isBold="true"/>
+				</textElement>
+				<text><![CDATA[RECEPTOR]]></text>
+			</staticText>
+		</band>
+	</detail>
+</jasperReport>

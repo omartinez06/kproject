@@ -3,6 +3,8 @@ package com.oscarmartinez.kproject.entity;
 import java.util.Date;
 
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -23,24 +25,33 @@ import lombok.Setter;
 @Entity
 public class Student {
 
+	public enum Status {
+		UP_TO_DATE, PENDING, DELIQUENT
+	}
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private long id;
 	private String name;
 	private String lastName;
-	private String dpi;
+	private String email;
 	private Date birth;
 	private String bloodType;
 	private String tutor;
 	private int quota;
 	private String license;
+	private boolean applyLatePayment;
+	private Date addedDate;
+
+	@Enumerated(EnumType.STRING)
+	private Status status;
 
 	@ManyToOne
 	private Schedule schedule;
 
 	@ManyToOne
 	private Kyu kyu;
-	
+
 	@ManyToOne
 	@JoinColumn(name = "gym_id")
 	private Gym gym;

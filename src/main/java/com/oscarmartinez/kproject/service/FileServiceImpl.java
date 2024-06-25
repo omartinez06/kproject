@@ -13,6 +13,7 @@ import java.util.List;
 
 import javax.annotation.processing.FilerException;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -21,11 +22,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.oscarmartinez.kproject.entity.Student;
+import com.oscarmartinez.kproject.repository.IStudentRepository;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
 public class FileServiceImpl implements IFileService {
+	
+	
+	@Autowired
+	private IStudentRepository studentRepository;
 
 	@Value("${user.dir.storage}")
 	private String imageDirectory;
@@ -41,7 +49,7 @@ public class FileServiceImpl implements IFileService {
 		for (String ext : extension) {
 			final Path filePath = Paths.get(imageDirectory).toAbsolutePath().normalize().resolve(fileName + ext)
 					.normalize();
-			log.info("download" + filePath.toString());
+			log.info(filePath.toString());
 			final Resource resource = new UrlResource(filePath.toUri());
 			if (resource.exists()) {
 				File file = resource.getFile();
@@ -94,7 +102,7 @@ public class FileServiceImpl implements IFileService {
 			for (String ext : extension) {
 				final Path filePath = Paths.get(imageDirectory).toAbsolutePath().normalize().resolve(fileName + ext)
 						.normalize();
-				log.info("download" + filePath.toString());
+				log.info(filePath.toString());
 				final Resource resource = new UrlResource(filePath.toUri());
 				if (resource.exists()) {
 					return resource;
@@ -108,6 +116,18 @@ public class FileServiceImpl implements IFileService {
 
 	public Resource getFileImage(final String fileName) throws FileNotFoundException {
 		return loadFileAsResource(fileName);
+	}
+
+	@Override
+	public ResponseEntity<?> generateRecipt(Long studentId) throws Exception {
+		final String METHOD_NAME = "generateRecipt()";
+		log.info("{} - Begin", METHOD_NAME);
+		
+		Student student = studentRepository.findById(studentId).orElseThrow(() -> new Exception("Student doesnt exist with id: " + studentId));
+		
+		
+		
+		return null;
 	}
 
 }

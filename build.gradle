@@ -21,15 +21,21 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	compileOnly 'org.projectlombok:lombok', 'org.xerial:sqlite-jdbc'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	// https://mvnrepository.com/artifact/org.json/json
-	implementation 'org.json:json:20090211'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	implementation 'org.json:json:20090211'
 	implementation 'io.jsonwebtoken:jjwt:0.9.1'
-	
+	implementation ('net.sf.jasperreports:jasperreports:6.15.0') {
+        exclude group: 'com.lowagie', module: 'itext'
+    }
+    implementation 'commons-io:commons-io:2.11.0'
+	implementation 'javax.mail:javax.mail-api:1.6.2'
+	compileOnly 'org.projectlombok:lombok'
+	compileOnly 'org.xerial:sqlite-jdbc'
+	annotationProcessor 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation fileTree(dir: './lib', include: ['*.jar'])
 }
 
 test {

@@ -33,6 +33,7 @@ public class Gym {
 	private String manager;
 	private String gymUser;
 	private String gymPassword;
+	private int latePayment;
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "gym_roles", joinColumns = @JoinColumn(name = "gym_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
 	private Set<Role> roles;

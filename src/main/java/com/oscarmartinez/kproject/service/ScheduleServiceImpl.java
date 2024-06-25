@@ -77,7 +77,8 @@ public class ScheduleServiceImpl implements IScheduleService {
 
 	@Override
 	public ResponseEntity<Long> getScheduleQuantity() throws Exception {
-		long schedules = scheduleRepo.count();
+		List<Schedule> listSchedule = scheduleRepo.findByGym(gymRepository.findByGymUser(jwtProvider.getUserName()));
+		long schedules = listSchedule.size();
 		log.debug("Horarios: " + schedules);
 		return ResponseEntity.ok(schedules);
 	}

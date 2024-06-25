@@ -19,8 +19,6 @@ import com.oscarmartinez.kproject.entity.Gym;
 import com.oscarmartinez.kproject.entity.Role;
 import com.oscarmartinez.kproject.repository.IGymRepository;
 import com.oscarmartinez.kproject.repository.IRoleRepository;
-import com.oscarmartinez.kproject.repository.IStudentRepository;
-import com.oscarmartinez.kproject.repository.ITrainerRepository;
 import com.oscarmartinez.kproject.resource.GymDTO;
 import com.oscarmartinez.kproject.resource.JwtResponse;
 import com.oscarmartinez.kproject.resource.LoginDTO;
@@ -42,12 +40,6 @@ public class GymServiceImpl implements IGymService {
 
 	@Autowired
 	private IRoleRepository roleRepository;
-	
-	@Autowired
-	private IStudentRepository studentRepository;
-	
-	@Autowired
-	private ITrainerRepository trainersRepository;
 
 	@Autowired
 	private JwtProvider jwtProvider;
@@ -59,8 +51,8 @@ public class GymServiceImpl implements IGymService {
 		authorities.add(defaultRole);
 
 		Gym newGym = Gym.builder().address(gym.getAddress()).name(gym.getName()).manager(gym.getManager())
-				.gymUser(gym.getUser()).gymPassword(passwordEncoder.encode(gym.getPassword())).roles(authorities)
-				.build();
+				.latePayment(gym.getLatePayment()).gymUser(gym.getUser())
+				.gymPassword(passwordEncoder.encode(gym.getPassword())).roles(authorities).build();
 
 		gymRepository.save(newGym);
 		return ResponseEntity.ok("Gimnasio registrado");
@@ -74,7 +66,8 @@ public class GymServiceImpl implements IGymService {
 		String jwt = jwtProvider.generateJwtToken(authentication);
 		UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 		log.debug("{} logged user: {}", "authenticateUser", jwtProvider.getUserName());
-		return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getUsername(), userDetails.getAuthorities(), jwtProvider.getJwtTokenExpiration(jwt)));
+		return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getUsername(), userDetails.getAuthorities(),
+				jwtProvider.getJwtTokenExpiration(jwt)));
 	}
 
 }

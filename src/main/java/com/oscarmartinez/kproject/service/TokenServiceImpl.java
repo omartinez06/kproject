@@ -67,7 +67,6 @@ public class TokenServiceImpl implements ITokenService {
 			tokenRepository.delete(token);
 		});
 	}
-
 	@Override
 	public ResponseEntity<?> validateToken(String token) throws Exception {
 		final String METHOD_NAME = "validateToken()";

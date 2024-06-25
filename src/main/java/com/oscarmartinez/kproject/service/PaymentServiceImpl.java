@@ -1,21 +1,31 @@
 package com.oscarmartinez.kproject.service;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.oscarmartinez.kproject.entity.ChargeHistory;
+import com.oscarmartinez.kproject.entity.ChargeMovement;
 import com.oscarmartinez.kproject.entity.Payment;
 import com.oscarmartinez.kproject.entity.Student;
+import com.oscarmartinez.kproject.repository.IChargeHistoryRepository;
+import com.oscarmartinez.kproject.repository.IChargeMovementRepository;
 import com.oscarmartinez.kproject.repository.IGymRepository;
 import com.oscarmartinez.kproject.repository.IPaymentRepository;
 import com.oscarmartinez.kproject.repository.IStudentRepository;
@@ -23,6 +33,16 @@ import com.oscarmartinez.kproject.resource.PaymentBotDTO;
 import com.oscarmartinez.kproject.resource.PaymentDTO;
 import com.oscarmartinez.kproject.resource.ReportMonthDTO;
 import com.oscarmartinez.kproject.security.JwtProvider;
+
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.design.JasperDesign;
+import net.sf.jasperreports.engine.xml.JRXmlLoader;
+import net.sf.jasperreports.engine.JREmptyDataSource;
 
 @Service
 public class PaymentServiceImpl implements IPaymentService {
@@ -37,6 +57,12 @@ public class PaymentServiceImpl implements IPaymentService {
 
 	@Autowired
 	private IGymRepository gymRepository;
+
+	@Autowired
+	private IChargeMovementRepository chargeMovementRepository;
+
+	@Autowired
+	private IChargeHistoryRepository chargeHistoryRepository;
 
 	@Autowired
 	private JwtProvider jwtProvider;
@@ -61,7 +87,9 @@ public class PaymentServiceImpl implements IPaymentService {
 		newPayment.setValid(true);
 		newPayment.setInsertedBy("ADMIN");
 
-		paymentRepo.save(newPayment);
+		Payment p = paymentRepo.save(newPayment);
+
+		validatePaymentAmount(p);
 	}
 
 	@Override
@@ -131,23 +159,24 @@ public class PaymentServiceImpl implements IPaymentService {
 		}
 		return response;
 	}
-	
-	public String getMonth(int month){
-	    String[] monthNames = {"ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"};
-	    return monthNames[month-1];
+
+	public String getMonth(int month) {
+		String[] monthNames = { "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE",
+				"OCTUBRE", "NOVIEMBRE", "DICIEMBRE" };
+		return monthNames[month - 1];
 	}
-	
+
 	public String getCurrentMonth() {
 		Date date = new Date();
 		LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 		int month = localDate.getMonthValue();
 		return getMonth(month);
 	}
-	
+
 	public boolean isLate() {
 		Date date = new Date();
 		LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-		if(localDate.getDayOfMonth() > 5) {
+		if (localDate.getDayOfMonth() > 5) {
 			return true;
 		}
 		return false;
@@ -173,8 +202,112 @@ public class PaymentServiceImpl implements IPaymentService {
 	public void validPayment(long id) throws Exception {
 		Payment payment = paymentRepo.findById(id).orElseThrow(() -> new Exception("Payment not exist with id: " + id));
 		payment.setValid(true);
-		
+
+		validatePaymentAmount(payment);
+
 		paymentRepo.save(payment);
+	}
+
+	public void validatePaymentAmount(Payment p) throws JRException, IOException {
+
+		createChargeHistory(p);
+
+		List<ChargeMovement> chargesDetails = chargeMovementRepository.findByStudent(p.getStudent());
+
+		Optional<ChargeMovement> optionalQuote = chargesDetails.stream()
+				.filter(chargeDetail -> chargeDetail.getType() == ChargeMovement.ChargeType.QUOTE).findFirst();
+
+		if (optionalQuote.isPresent()) {
+
+			ChargeMovement quote = optionalQuote.get();
+			if (p.getValue() < quote.getAmount()) {
+				int newAmount = quote.getAmount() - p.getValue();
+				quote.setAmount(newAmount);
+				chargeMovementRepository.save(quote);
+			} else if (p.getValue() == quote.getAmount()) {
+				chargeMovementRepository.delete(quote);
+			} else {
+				chargeMovementRepository.delete(quote);
+				boolean containLateness = chargesDetails.stream()
+						.anyMatch(chargeDetail -> chargeDetail.getType() == ChargeMovement.ChargeType.DELINQUENCY);
+
+				int newAmountAvailable = p.getValue() - quote.getAmount();
+				if (containLateness) {
+					Optional<ChargeMovement> optionalLateness = chargesDetails.stream()
+							.filter(chargeDetail -> chargeDetail.getType() == ChargeMovement.ChargeType.DELINQUENCY)
+							.findFirst();
+					if (optionalLateness.isPresent()) {
+						ChargeMovement lateness = optionalLateness.get();
+						if (newAmountAvailable < lateness.getAmount()) {
+							int newLateness = lateness.getAmount() - newAmountAvailable;
+							lateness.setAmount(newLateness);
+							chargeMovementRepository.save(lateness);
+						} else {
+							chargeMovementRepository.delete(lateness);
+						}
+					}
+				}
+			}
+		} else {
+			boolean containLateness = chargesDetails.stream()
+					.anyMatch(chargeDetail -> chargeDetail.getType() == ChargeMovement.ChargeType.DELINQUENCY);
+			if (containLateness) {
+				Optional<ChargeMovement> optionalLateness = chargesDetails.stream()
+						.filter(chargeDetail -> chargeDetail.getType() == ChargeMovement.ChargeType.DELINQUENCY)
+						.findFirst();
+				if (optionalLateness.isPresent()) {
+					ChargeMovement lateness = optionalLateness.get();
+					if (p.getValue() < lateness.getAmount()) {
+						int newLateness = lateness.getAmount() - p.getValue();
+						lateness.setAmount(newLateness);
+						chargeMovementRepository.save(lateness);
+					} else {
+						chargeMovementRepository.delete(lateness);
+					}
+				}
+			}
+		}
+
+		List<ChargeMovement> chargesDetailsAfterProcess = chargeMovementRepository.findByStudent(p.getStudent());
+		Student student = p.getStudent();
+		if (chargesDetailsAfterProcess.isEmpty()) {
+			student.setStatus(Student.Status.UP_TO_DATE);
+		}
+
+		studentRepo.save(student);
+
+	}
+
+	public void createChargeHistory(Payment p) throws JRException, IOException {
+		ChargeHistory chargeHistory = new ChargeHistory();
+		chargeHistory.setAddedDate(new Date());
+		chargeHistory.setAmount(p.getValue());
+		chargeHistory.setDescription("Pago Recibido");
+		chargeHistory.setType(ChargeHistory.ChargeTypeHistory.PAYMENT);
+		chargeHistory.setGym(p.getGym());
+		chargeHistory.setStudent(p.getStudent());
+
+		chargeHistoryRepository.save(chargeHistory);
+		
+		generateRecipt(p, "Pago realizado en dojo ken sei kai.");
+	}
+
+	public void generateRecipt(Payment p, String description) throws JRException, IOException {
+		
+		Map<String, Object> parameters = new HashMap<>();
+		parameters.put("dateRecipt", LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+		parameters.put("number", Long.toString(p.getId()));
+		parameters.put("client", p.getStudent().getTutor());
+		parameters.put("description", description);
+		parameters.put("reciptValue", "Q" + p.getValue() + ".00");
+		
+		InputStream jrxmlInputStreamPayment = new ClassPathResource("Recipt.jrxml").getInputStream();
+		JasperDesign designPayment = JRXmlLoader.load(jrxmlInputStreamPayment);
+		JasperReport jasperReportPayment = JasperCompileManager.compileReport(designPayment);
+		JasperPrint jasperPrintPayment = JasperFillManager.fillReport(jasperReportPayment, parameters, new JREmptyDataSource());
+		
+		JasperExportManager.exportReportToPdfFile(jasperPrintPayment, "Recibo_"+p.getId()+".pdf");
+
 	}
 
 }
