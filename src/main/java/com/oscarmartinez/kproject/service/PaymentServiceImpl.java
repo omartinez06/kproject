@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -214,56 +215,63 @@ public class PaymentServiceImpl implements IPaymentService {
 
 		List<ChargeMovement> chargesDetails = chargeMovementRepository.findByStudent(p.getStudent());
 
-		Optional<ChargeMovement> optionalQuote = chargesDetails.stream()
-				.filter(chargeDetail -> chargeDetail.getType() == ChargeMovement.ChargeType.QUOTE).findFirst();
+		// Obtain oldest cuote
+		Optional<ChargeMovement> oldestCharge = chargesDetails.stream()
+				.filter(charge -> charge.getType() == ChargeMovement.ChargeType.QUOTE)
+				.min(Comparator.comparing(ChargeMovement::getAddedDate));
 
-		if (optionalQuote.isPresent()) {
+		int availableAmount = p.getValue();
 
-			ChargeMovement quote = optionalQuote.get();
-			if (p.getValue() < quote.getAmount()) {
-				int newAmount = quote.getAmount() - p.getValue();
+		while (oldestCharge.isPresent() && availableAmount > 0) {
+			ChargeMovement quote = oldestCharge.get();
+			if (availableAmount < quote.getAmount()) {
+				int newAmount = quote.getAmount() - availableAmount;
+				int temp = availableAmount;
+				availableAmount = temp - quote.getAmount();
 				quote.setAmount(newAmount);
 				chargeMovementRepository.save(quote);
-			} else if (p.getValue() == quote.getAmount()) {
+			} else if (availableAmount == quote.getAmount()) {
+				int temp = availableAmount;
+				availableAmount = temp - quote.getAmount();
 				chargeMovementRepository.delete(quote);
 			} else {
+				int temp = availableAmount;
+				availableAmount = temp - quote.getAmount();
 				chargeMovementRepository.delete(quote);
-				boolean containLateness = chargesDetails.stream()
-						.anyMatch(chargeDetail -> chargeDetail.getType() == ChargeMovement.ChargeType.DELINQUENCY);
-
-				int newAmountAvailable = p.getValue() - quote.getAmount();
-				if (containLateness) {
-					Optional<ChargeMovement> optionalLateness = chargesDetails.stream()
-							.filter(chargeDetail -> chargeDetail.getType() == ChargeMovement.ChargeType.DELINQUENCY)
-							.findFirst();
-					if (optionalLateness.isPresent()) {
-						ChargeMovement lateness = optionalLateness.get();
-						if (newAmountAvailable < lateness.getAmount()) {
-							int newLateness = lateness.getAmount() - newAmountAvailable;
-							lateness.setAmount(newLateness);
-							chargeMovementRepository.save(lateness);
-						} else {
-							chargeMovementRepository.delete(lateness);
-						}
-					}
-				}
 			}
-		} else {
+
+			// Obtain oldest cuote
+			oldestCharge = chargeMovementRepository.findByStudent(p.getStudent()).stream()
+					.filter(charge -> charge.getType() == ChargeMovement.ChargeType.QUOTE)
+					.min(Comparator.comparing(ChargeMovement::getAddedDate));
+
+		}
+
+		if (!oldestCharge.isPresent() && availableAmount > 0) {
 			boolean containLateness = chargesDetails.stream()
 					.anyMatch(chargeDetail -> chargeDetail.getType() == ChargeMovement.ChargeType.DELINQUENCY);
 			if (containLateness) {
+				// Obtain oldest past deliquency
 				Optional<ChargeMovement> optionalLateness = chargesDetails.stream()
-						.filter(chargeDetail -> chargeDetail.getType() == ChargeMovement.ChargeType.DELINQUENCY)
-						.findFirst();
-				if (optionalLateness.isPresent()) {
+						.filter(charge -> charge.getType() == ChargeMovement.ChargeType.DELINQUENCY)
+						.min(Comparator.comparing(ChargeMovement::getAddedDate));
+				while (optionalLateness.isPresent() && availableAmount > 0) {
 					ChargeMovement lateness = optionalLateness.get();
-					if (p.getValue() < lateness.getAmount()) {
-						int newLateness = lateness.getAmount() - p.getValue();
+					if (availableAmount < lateness.getAmount()) {
+						int newLateness = lateness.getAmount() - availableAmount;
+						int tempVal = availableAmount;
+						availableAmount = tempVal - lateness.getAmount();
 						lateness.setAmount(newLateness);
 						chargeMovementRepository.save(lateness);
 					} else {
+						int tempVal = availableAmount;
+						availableAmount = tempVal - lateness.getAmount();
 						chargeMovementRepository.delete(lateness);
 					}
+
+					optionalLateness = chargeMovementRepository.findByStudent(p.getStudent()).stream()
+							.filter(charge -> charge.getType() == ChargeMovement.ChargeType.DELINQUENCY)
+							.min(Comparator.comparing(ChargeMovement::getAddedDate));
 				}
 			}
 		}
@@ -288,25 +296,27 @@ public class PaymentServiceImpl implements IPaymentService {
 		chargeHistory.setStudent(p.getStudent());
 
 		chargeHistoryRepository.save(chargeHistory);
-		
+
 		generateRecipt(p, "Pago realizado en dojo ken sei kai.");
 	}
 
 	public void generateRecipt(Payment p, String description) throws JRException, IOException {
-		
+
 		Map<String, Object> parameters = new HashMap<>();
-		parameters.put("dateRecipt", LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+		parameters.put("dateRecipt",
+				LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")));
 		parameters.put("number", Long.toString(p.getId()));
 		parameters.put("client", p.getStudent().getTutor());
 		parameters.put("description", description);
 		parameters.put("reciptValue", "Q" + p.getValue() + ".00");
-		
+
 		InputStream jrxmlInputStreamPayment = new ClassPathResource("Recipt.jrxml").getInputStream();
 		JasperDesign designPayment = JRXmlLoader.load(jrxmlInputStreamPayment);
 		JasperReport jasperReportPayment = JasperCompileManager.compileReport(designPayment);
-		JasperPrint jasperPrintPayment = JasperFillManager.fillReport(jasperReportPayment, parameters, new JREmptyDataSource());
-		
-		JasperExportManager.exportReportToPdfFile(jasperPrintPayment, "Recibo_"+p.getId()+".pdf");
+		JasperPrint jasperPrintPayment = JasperFillManager.fillReport(jasperReportPayment, parameters,
+				new JREmptyDataSource());
+
+		JasperExportManager.exportReportToPdfFile(jasperPrintPayment, "Recibo_" + p.getId() + ".pdf");
 
 	}
 

@@ -34,7 +34,7 @@ public class AppStartupRunner {
 	@PostConstruct
 	public void init() {
 		calculateFees();
-		System.out.println("La aplicación Spring Boot ha iniciado.");
+		System.out.println("Proceso de cargos de mensualidades y mora finalizado.");
 	}
 
 	public void calculateFees() {
@@ -44,11 +44,9 @@ public class AppStartupRunner {
 		for (Student student : students) {
 			List<ChargeMovement> chargeDetailPerStudent = chargeMovementRepository.findByStudent(student);
 
-			if (LocalDate.now().getDayOfMonth() >= 1 && LocalDate.now().getDayOfMonth() <= 5) {
+			if (LocalDate.now().getDayOfMonth() >= 1 && LocalDate.now().getDayOfMonth() <= 25) {
 				if (!(containsCharge(ChargeMovement.ChargeType.QUOTE, chargeDetailPerStudent))) {
 					createCharge(student, ChargeMovement.ChargeType.QUOTE);
-					student.setStatus(Student.Status.PENDING);
-					studentRepository.save(student);
 				}
 
 			}
@@ -70,8 +68,6 @@ public class AppStartupRunner {
 					&& containsCharge(ChargeMovement.ChargeType.QUOTE, chargeDetailPerStudent)
 					&& student.isApplyLatePayment() && !isNewStudent) {
 				if (!(containsCharge(ChargeMovement.ChargeType.DELINQUENCY, chargeDetailPerStudent))) {
-					student.setStatus(Student.Status.DELIQUENT);
-					studentRepository.save(student);
 					createCharge(student, ChargeMovement.ChargeType.DELINQUENCY);
 				}
 			}
@@ -108,8 +104,16 @@ public class AppStartupRunner {
 		String description = type == ChargeMovement.ChargeType.QUOTE ? "Cuota Mes " + formattedDate
 				: "Mora Mes " + formattedDate;
 		
-		if(existHistory(description))
+		if(existHistory(description, student))
 			return;
+		
+		if(type == ChargeMovement.ChargeType.QUOTE) {
+			student.setStatus(Student.Status.PENDING);
+			studentRepository.save(student);
+		} else {
+			student.setStatus(Student.Status.DELIQUENT);
+			studentRepository.save(student);
+		}
 
 		ChargeMovement chargeDetail = new ChargeMovement();
 		chargeDetail.setAddedDate(new Date());
@@ -137,8 +141,8 @@ public class AppStartupRunner {
 		chargeHistoryRepository.save(chargeHistory);
 	}
 	
-	public boolean existHistory(String description) {
-		List<ChargeHistory> studentHistory = chargeHistoryRepository.findByDescription(description);
+	public boolean existHistory(String description, Student s) {
+		List<ChargeHistory> studentHistory = chargeHistoryRepository.findByDescriptionAndStudent(description, s);
 		
 		if(!studentHistory.isEmpty())
 			return true;
