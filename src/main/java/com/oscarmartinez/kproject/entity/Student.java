@@ -26,7 +26,7 @@ import lombok.Setter;
 public class Student {
 
 	public enum Status {
-		UP_TO_DATE, PENDING, DELIQUENT
+		UP_TO_DATE, PENDING, DELIQUENT, LOCKED
 	}
 
 	@Id
@@ -39,6 +39,7 @@ public class Student {
 	private String bloodType;
 	private String tutor;
 	private int quota;
+	private int inscription;
 	private String license;
 	private boolean applyLatePayment;
 	private Date addedDate;

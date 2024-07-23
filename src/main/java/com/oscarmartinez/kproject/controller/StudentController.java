@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.oscarmartinez.kproject.entity.Student;
+import com.oscarmartinez.kproject.resource.AccountStatusDTO;
 import com.oscarmartinez.kproject.resource.StudentDTO;
 import com.oscarmartinez.kproject.service.StudentSeriviceImpl;
 
@@ -61,6 +62,11 @@ public class StudentController {
 	@GetMapping("/license/{license}")
 	public Student getStudentByLicense(@PathVariable String license) throws Exception {
 		return studentService.getStudentByLicense(license);
+	}
+	
+	@PostMapping("/accst")
+	public void generateAccountStatus(@RequestBody AccountStatusDTO accountStatus) throws Exception {
+		studentService.generateAccountStatus(accountStatus);
 	}
 
 }

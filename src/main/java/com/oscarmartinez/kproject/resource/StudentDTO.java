@@ -26,5 +26,6 @@ public class StudentDTO implements Serializable {
 	private long schedule;
 	private long kyuId;
 	private boolean applyLatePayment;
+	private String inscription;
 
 }

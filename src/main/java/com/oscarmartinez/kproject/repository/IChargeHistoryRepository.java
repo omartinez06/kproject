@@ -1,5 +1,6 @@
 package com.oscarmartinez.kproject.repository;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,5 +13,7 @@ import com.oscarmartinez.kproject.entity.Student;
 public interface IChargeHistoryRepository extends JpaRepository<ChargeHistory, Long> {
 	
 	public List<ChargeHistory> findByDescriptionAndStudent(String description, Student student);
+	
+	List<ChargeHistory> findByAddedDateBetweenAndStudentOrderByAddedDateAsc(Date startDate, Date endDate, Student student);
 
 }

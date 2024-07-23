@@ -6,8 +6,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
+import javax.mail.*;
+import javax.mail.internet.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -42,10 +47,27 @@ public class AppStartupRunner {
 		List<Student> students = studentRepository.findAll();
 
 		for (Student student : students) {
+			
+			if(student.getStatus() == Student.Status.LOCKED) {
+				continue;
+			}
+			
 			List<ChargeMovement> chargeDetailPerStudent = chargeMovementRepository.findByStudent(student);
 
-			if (LocalDate.now().getDayOfMonth() >= 1 && LocalDate.now().getDayOfMonth() <= 25) {
+			if (LocalDate.now().getDayOfMonth() >= 1 && LocalDate.now().getDayOfMonth() <= 5) {
 				if (!(containsCharge(ChargeMovement.ChargeType.QUOTE, chargeDetailPerStudent))) {
+					
+					// Agrupamos los cargos por tipo
+			        Map<ChargeMovement.ChargeType, Long> typeCount = chargeDetailPerStudent.stream()
+			            .collect(Collectors.groupingBy(ChargeMovement::getType, Collectors.counting()));
+			        //Valido que no existan más de 2 cargos de tipo QUOTE o DELINQUENCY
+			        if (typeCount.getOrDefault(ChargeMovement.ChargeType.QUOTE, 0L) >= 2) {
+			        	student.setStatus(Student.Status.LOCKED);
+						studentRepository.save(student);
+						sendAlertMail(student);
+						continue;
+			        }
+			        
 					createCharge(student, ChargeMovement.ChargeType.QUOTE);
 				}
 
@@ -64,7 +86,7 @@ public class AppStartupRunner {
 				isNewStudent = false;
 			}
 
-			if (LocalDate.now().getDayOfMonth() >= 5
+			if (LocalDate.now().getDayOfMonth() > 5
 					&& containsCharge(ChargeMovement.ChargeType.QUOTE, chargeDetailPerStudent)
 					&& student.isApplyLatePayment() && !isNewStudent) {
 				if (!(containsCharge(ChargeMovement.ChargeType.DELINQUENCY, chargeDetailPerStudent))) {
@@ -148,6 +170,39 @@ public class AppStartupRunner {
 			return true;
 		
 		return false;
+	}
+	
+	public void sendAlertMail(Student student) {
+		// Configuración de propiedades para la conexión al servidor SMTP
+        Properties props = new Properties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.host", "smtp.gmail.com");
+        props.put("mail.smtp.port", "587");
+
+        // Crear una sesión con autenticación
+        Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication("oscarmartinez@galileo.edu", "Nickelback20");
+            }
+        });
+
+        try {
+            // Crear el mensaje de correo
+            Message message = new MimeMessage(session);
+            message.setFrom(new InternetAddress("oscarmartinez@galileo.edu"));
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(student.getEmail()));
+            message.setSubject("Alerta De Pago Ken Sei Kai");
+            message.setText("Hola Ken Sei Kai te recuerda que tienen saldo pendiente de 2 meses, por favor acercate lo antes posible para realizar tu pago.");
+
+            // Enviar el mensaje
+            Transport.send(message);
+
+            System.out.println("Correo enviado exitosamente");
+
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
 	}
 
 }

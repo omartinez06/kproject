@@ -26,4 +26,6 @@ public interface IPaymentService {
 	void registerBotPayment(PaymentBotDTO payment) throws Exception;
 	
 	void validPayment(long id) throws Exception;
+	
+	void sendRecipt(long id) throws Exception;
 }

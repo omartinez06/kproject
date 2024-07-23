@@ -29,7 +29,8 @@ dependencies {
         exclude group: 'com.lowagie', module: 'itext'
     }
     implementation 'commons-io:commons-io:2.11.0'
-	implementation 'javax.mail:javax.mail-api:1.6.2'
+	implementation 'javax.mail:mail:1.4.7'
+    implementation 'org.apache.commons:commons-email:1.5'
 	compileOnly 'org.projectlombok:lombok'
 	compileOnly 'org.xerial:sqlite-jdbc'
 	annotationProcessor 'org.projectlombok:lombok'

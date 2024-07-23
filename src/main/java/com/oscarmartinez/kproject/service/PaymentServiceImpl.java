@@ -1,5 +1,6 @@
 package com.oscarmartinez.kproject.service;
 
+import org.apache.commons.mail.EmailException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
@@ -10,8 +11,17 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+
+import javax.mail.*;
+import javax.mail.internet.*;
+
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
+
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -209,18 +219,37 @@ public class PaymentServiceImpl implements IPaymentService {
 		paymentRepo.save(payment);
 	}
 
-	public void validatePaymentAmount(Payment p) throws JRException, IOException {
+	public void validatePaymentAmount(Payment p) throws JRException, IOException, EmailException {
 
 		createChargeHistory(p);
 
 		List<ChargeMovement> chargesDetails = chargeMovementRepository.findByStudent(p.getStudent());
 
+		int availableAmount = p.getValue();
+
+		Optional<ChargeMovement> inscription = chargesDetails.stream()
+				.filter(charge -> charge.getType() == ChargeMovement.ChargeType.ADDITIONAL)
+				.min(Comparator.comparing(ChargeMovement::getAddedDate));
+
+		if (inscription.isPresent()) {
+			ChargeMovement inscriptionValue = inscription.get();
+			if (availableAmount == inscriptionValue.getAmount()) {
+				int temp = availableAmount;
+				availableAmount = temp - inscriptionValue.getAmount();
+				chargeMovementRepository.delete(inscriptionValue);
+			} else if (availableAmount > inscriptionValue.getAmount()) {
+				int temp = availableAmount;
+				availableAmount = temp - inscriptionValue.getAmount();
+				chargeMovementRepository.delete(inscriptionValue);
+			} else {
+				System.out.println("No aplica a pago de inscripcion, procede a buscar cuotas.");
+			}
+		}
+
 		// Obtain oldest cuote
 		Optional<ChargeMovement> oldestCharge = chargesDetails.stream()
 				.filter(charge -> charge.getType() == ChargeMovement.ChargeType.QUOTE)
 				.min(Comparator.comparing(ChargeMovement::getAddedDate));
-
-		int availableAmount = p.getValue();
 
 		while (oldestCharge.isPresent() && availableAmount > 0) {
 			ChargeMovement quote = oldestCharge.get();
@@ -286,7 +315,7 @@ public class PaymentServiceImpl implements IPaymentService {
 
 	}
 
-	public void createChargeHistory(Payment p) throws JRException, IOException {
+	public void createChargeHistory(Payment p) throws JRException, IOException, EmailException {
 		ChargeHistory chargeHistory = new ChargeHistory();
 		chargeHistory.setAddedDate(new Date());
 		chargeHistory.setAmount(p.getValue());
@@ -300,7 +329,7 @@ public class PaymentServiceImpl implements IPaymentService {
 		generateRecipt(p, "Pago realizado en dojo ken sei kai.");
 	}
 
-	public void generateRecipt(Payment p, String description) throws JRException, IOException {
+	public void generateRecipt(Payment p, String description) throws JRException, IOException, EmailException {
 
 		Map<String, Object> parameters = new HashMap<>();
 		parameters.put("dateRecipt",
@@ -316,8 +345,68 @@ public class PaymentServiceImpl implements IPaymentService {
 		JasperPrint jasperPrintPayment = JasperFillManager.fillReport(jasperReportPayment, parameters,
 				new JREmptyDataSource());
 
-		JasperExportManager.exportReportToPdfFile(jasperPrintPayment, "Recibo_" + p.getId() + ".pdf");
+		// JasperExportManager.exportReportToPdfFile(jasperPrintPayment, "Recibo_" +
+		// p.getId() + ".pdf");
 
+		String pdfFilePath = "Recibo_" + p.getId() + ".pdf";
+		JasperExportManager.exportReportToPdfFile(jasperPrintPayment, pdfFilePath);
+
+		sendEmailWithAttachment(p.getStudent().getEmail(), "Recibo de Pago", "Adjunto encontrará el recibo de pago.",
+				pdfFilePath);
+
+	}
+
+	public void sendEmailWithAttachment(String to, String subject, String messageText, String filePath)
+			throws EmailException {
+
+		Properties props = new Properties();
+		props.put("mail.smtp.host", "smtp.gmail.com");
+		props.put("mail.smtp.port", "587");
+		props.put("mail.smtp.auth", "true");
+		props.put("mail.smtp.starttls.enable", "true");
+		props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+
+		Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+			protected PasswordAuthentication getPasswordAuthentication() {
+				return new PasswordAuthentication("oscarmartinez@galileo.edu", "Nickelback20");
+			}
+		});
+
+		// Enviar el correo electrónico con archivo adjunto
+		try {
+			Message message = new MimeMessage(session);
+			message.setFrom(new InternetAddress("oscarmartinez@galileo.edu"));
+			message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
+			message.setSubject(subject);
+
+			BodyPart messageBodyPart = new MimeBodyPart();
+			messageBodyPart.setText(messageText);
+
+			Multipart multipart = new MimeMultipart();
+			multipart.addBodyPart(messageBodyPart);
+
+			messageBodyPart = new MimeBodyPart();
+			DataSource source = new FileDataSource(filePath);
+			messageBodyPart.setDataHandler(new DataHandler(source));
+			messageBodyPart.setFileName(filePath);
+			multipart.addBodyPart(messageBodyPart);
+
+			message.setContent(multipart);
+
+			Transport.send(message);
+
+			System.out.println("Correo enviado con éxito.");
+		} catch (MessagingException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Override
+	public void sendRecipt(long id) throws Exception {
+		Payment payment = paymentRepo.findById(id)
+				.orElseThrow(() -> new Exception("Payment does not exist with id: " + id));
+
+		generateRecipt(payment, "Pago realizado en dojo ken sei kai.");
 	}
 
 }

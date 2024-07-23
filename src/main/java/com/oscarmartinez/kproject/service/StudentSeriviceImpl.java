@@ -1,16 +1,43 @@
 package com.oscarmartinez.kproject.service;
 
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 import java.util.Random;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
+import javax.mail.BodyPart;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+
+import org.apache.commons.mail.EmailException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -27,10 +54,21 @@ import com.oscarmartinez.kproject.repository.IGymRepository;
 import com.oscarmartinez.kproject.repository.IKyuRepository;
 import com.oscarmartinez.kproject.repository.IScheduleRepository;
 import com.oscarmartinez.kproject.repository.IStudentRepository;
+import com.oscarmartinez.kproject.resource.AccountStatusDTO;
+import com.oscarmartinez.kproject.resource.AccountStatusReportDTO;
+import com.oscarmartinez.kproject.resource.AccountStatusReportInformation;
 import com.oscarmartinez.kproject.resource.StudentDTO;
 import com.oscarmartinez.kproject.security.JwtProvider;
 
 import lombok.extern.slf4j.Slf4j;
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.engine.design.JasperDesign;
+import net.sf.jasperreports.engine.xml.JRXmlLoader;
 
 @Slf4j
 @Service
@@ -52,10 +90,10 @@ public class StudentSeriviceImpl implements IStudentService {
 
 	@Autowired
 	private IGymRepository gymRepository;
-	
+
 	@Autowired
 	private IChargeMovementRepository chargeMovementRepository;
-	
+
 	@Autowired
 	private IChargeHistoryRepository chargeHistoryRepository;
 
@@ -63,33 +101,33 @@ public class StudentSeriviceImpl implements IStudentService {
 	public List<Student> listStudents() {
 		return studentRepository.findByGym(gymRepository.findByGymUser(jwtProvider.getUserName()));
 	}
-	
+
 	public String getLicenseId() {
-        Random r = new Random();
-        String license = "";
-        boolean exit = true;
-        
-        while (exit) {
-            StringBuffer sb = new StringBuffer();
-            while (sb.length() < 3) {
-            	//Limitar el valor aleatorio a 16 para obtener solo dígitos hexadecimales
-                sb.append(Integer.toHexString(r.nextInt(16)));
-            }
-            
-            int year = Calendar.getInstance().get(Calendar.YEAR);
-          //Convertir la cadena aleatoria a mayúsculas
-            license = year + sb.toString().toUpperCase();
-            
-            //Verificar si existe un estudiante con el mismo número de licencia
-            Student student = studentRepository.findByLicense(license);
-            if (student == null) {
-            	//Salir del bucle si no existe ningún estudiante con ese número de licencia
-                exit = false;
-            }
-        }
-        
-        return license;
-    }
+		Random r = new Random();
+		String license = "";
+		boolean exit = true;
+
+		while (exit) {
+			StringBuffer sb = new StringBuffer();
+			while (sb.length() < 3) {
+				// Limitar el valor aleatorio a 16 para obtener solo dígitos hexadecimales
+				sb.append(Integer.toHexString(r.nextInt(16)));
+			}
+
+			int year = Calendar.getInstance().get(Calendar.YEAR);
+			// Convertir la cadena aleatoria a mayúsculas
+			license = year + sb.toString().toUpperCase();
+
+			// Verificar si existe un estudiante con el mismo número de licencia
+			Student student = studentRepository.findByLicense(license);
+			if (student == null) {
+				// Salir del bucle si no existe ningún estudiante con ese número de licencia
+				exit = false;
+			}
+		}
+
+		return license;
+	}
 
 	@Override
 	public void addStudent(StudentDTO student) throws Exception {
@@ -111,32 +149,66 @@ public class StudentSeriviceImpl implements IStudentService {
 		newStudent.setKyu(kyu);
 		newStudent.setApplyLatePayment(student.isApplyLatePayment());
 		newStudent.setAddedDate(new Date());
+		newStudent.setInscription(Integer.parseInt(student.getInscription()));
+		newStudent.setStatus(Student.Status.PENDING);
 
 		Student s = studentRepository.save(newStudent);
+
+		if (s.getQuota() > 0)
+			createCharge(s, ChargeMovement.ChargeType.QUOTE, Integer.parseInt(student.getInscription()));
+	}
+
+	public void createCharge(Student student, ChargeMovement.ChargeType type, int inscription) {
+		// Inscripcion
+		if (inscription > 0) {
+			ChargeMovement chargeDetail = new ChargeMovement();
+			chargeDetail.setAddedDate(new Date());
+			chargeDetail.setAmount(inscription);
+			chargeDetail.setDescription("Inscripcion Ken Sei Kai");
+			chargeDetail.setType(ChargeMovement.ChargeType.ADDITIONAL);
+			chargeDetail.setGym(student.getGym());
+			chargeDetail.setStudent(student);
+
+			chargeMovementRepository.save(chargeDetail);
+			createChargeHistory(chargeDetail);
+		}
+		// Mensualidad
+		int monthQuota = calculateProratedQuota(student);
 		
-		if(s.getQuota() > 0)
-			createCharge(s, ChargeMovement.ChargeType.QUOTE);
+		if(monthQuota > 0) {
+			ChargeMovement chargeDetail = new ChargeMovement();
+			chargeDetail.setAddedDate(new Date());
+			chargeDetail.setAmount(student.getQuota());
+
+			// Formateador para obtener el mes en formato largo y el año
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.forLanguageTag("es"));
+
+			// Formatear la fecha actual
+			String formattedDate = LocalDate.now().format(formatter);
+			chargeDetail.setDescription("Cuota Mes " + formattedDate);
+			chargeDetail.setType(type);
+			chargeDetail.setGym(student.getGym());
+			chargeDetail.setStudent(student);
+
+			chargeMovementRepository.save(chargeDetail);
+			createChargeHistory(chargeDetail);
+		}
 	}
 	
-	public void createCharge(Student student, ChargeMovement.ChargeType type) {
-		ChargeMovement chargeDetail = new ChargeMovement();
-		chargeDetail.setAddedDate(new Date());
-		chargeDetail.setAmount(student.getQuota());
+	public int calculateProratedQuota(Student student) {
+		LocalDateTime today = LocalDateTime.now();
+		YearMonth currentYearMonth = YearMonth.from(today);
+        int totalDaysInMonth = currentYearMonth.lengthOfMonth();
+        int daysRemaining = totalDaysInMonth - today.getDayOfMonth() + 1;
+
+        int dailyRate = student.getQuota() / totalDaysInMonth;
+        logger.debug("{} - The prorate quota is: {}", "calculateProratedQuota()", dailyRate);
+        if(dailyRate > 100)
+        	return dailyRate * daysRemaining;
         
-        // Formateador para obtener el mes en formato largo y el año
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.forLanguageTag("es"));
-        
-        // Formatear la fecha actual
-        String formattedDate = LocalDate.now().format(formatter);
-		chargeDetail.setDescription("Cuota Mes " + formattedDate);
-		chargeDetail.setType(type);
-		chargeDetail.setGym(student.getGym());
-		chargeDetail.setStudent(student);
-		
-		chargeMovementRepository.save(chargeDetail);
-		createChargeHistory(chargeDetail);
+        return 0;
 	}
-	
+
 	public void createChargeHistory(ChargeMovement charge) {
 		ChargeHistory chargeHistory = new ChargeHistory();
 		chargeHistory.setAddedDate(new Date());
@@ -167,6 +239,7 @@ public class StudentSeriviceImpl implements IStudentService {
 				.orElseThrow(() -> new Exception("Kyu not exist with id: " + studentDetail.getKyuId()));
 		student.setKyu(kyu);
 		student.setApplyLatePayment(studentDetail.isApplyLatePayment());
+		student.setInscription(Integer.parseInt(studentDetail.getInscription()));
 
 		studentRepository.save(student);
 
@@ -200,6 +273,126 @@ public class StudentSeriviceImpl implements IStudentService {
 	@Override
 	public Student getStudentByLicense(String license) throws Exception {
 		return studentRepository.findByLicense(license);
+	}
+
+	@Override
+	public ResponseEntity<HttpStatus> generateAccountStatus(AccountStatusDTO accountStatusDetail) throws Exception {
+		generateReportAccoutStatus(accountStatusDetail);
+
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	public void generateReportAccoutStatus(AccountStatusDTO accountStatusInfo) throws Exception {
+
+		Student student = studentRepository.findById(accountStatusInfo.getId())
+				.orElseThrow(() -> new Exception("Student not exist with id: " + accountStatusInfo.getId()));
+
+		Collection<AccountStatusReportDTO> collectionAccountStatus = getReportAccountStatus(accountStatusInfo);
+
+		Map<String, Object> parameters = new HashMap<>();
+		parameters.put("validFrom", new SimpleDateFormat("dd/MM/yyyy").format(accountStatusInfo.getFrom()));
+		parameters.put("validUntil", new SimpleDateFormat("dd/MM/yyyy").format(accountStatusInfo.getTo()));
+		parameters.put("name", student.getName() + " " + student.getLastName());
+
+		InputStream jrxmlInputStreamAccountStatus = new ClassPathResource("AccountStatus.jrxml").getInputStream();
+		JasperDesign designAccountStatus = JRXmlLoader.load(jrxmlInputStreamAccountStatus);
+		JasperReport jasperReportAccountStatus = JasperCompileManager.compileReport(designAccountStatus);
+		JasperPrint jasperPrintAccountStatus = JasperFillManager.fillReport(jasperReportAccountStatus, parameters,
+				new JRBeanCollectionDataSource(collectionAccountStatus));
+
+		/*
+		 * JasperExportManager.exportReportToPdfFile(jasperPrintAccountStatus,
+		 * "AccountStatus_" + new
+		 * SimpleDateFormat("ddMMyyyy").format(accountStatusInfo.getFrom()) + "_" + new
+		 * SimpleDateFormat("ddMMyyyy").format(accountStatusInfo.getTo()) + ".pdf");
+		 */
+
+		String pdfFilePath = "AccountStatus_" + new SimpleDateFormat("ddMMyyyy").format(accountStatusInfo.getFrom())
+				+ "_" + new SimpleDateFormat("ddMMyyyy").format(accountStatusInfo.getTo()) + ".pdf";
+		JasperExportManager.exportReportToPdfFile(jasperPrintAccountStatus, pdfFilePath);
+
+		sendEmailWithAttachment(student.getEmail(), "Estado De Cuenta",
+				"Adjunto encontrará su estado de cuenta correspondiente del "
+						+ new SimpleDateFormat("dd/MM/yyyy").format(accountStatusInfo.getFrom()) + " al "
+						+ new SimpleDateFormat("dd/MM/yyyy").format(accountStatusInfo.getTo()) + ".",
+				pdfFilePath);
+
+	}
+
+	public Collection<AccountStatusReportDTO> getReportAccountStatus(AccountStatusDTO accountStatusInfo)
+			throws Exception {
+		Student student = studentRepository.findById(accountStatusInfo.getId())
+				.orElseThrow(() -> new Exception("Student not exist with id: " + accountStatusInfo.getId()));
+
+		List<ChargeHistory> chargeHistoryList = chargeHistoryRepository
+				.findByAddedDateBetweenAndStudentOrderByAddedDateAsc(accountStatusInfo.getFrom(),
+						accountStatusInfo.getTo(), student);
+
+		List<AccountStatusReportInformation> informationList = new ArrayList<>();
+		for (ChargeHistory history : chargeHistoryList) {
+			AccountStatusReportInformation information = new AccountStatusReportInformation();
+			information.setDate(new SimpleDateFormat("dd/MM/yyyy").format(history.getAddedDate()));
+			information.setDescription(history.getDescription());
+			if (history.getType().equals(ChargeHistory.ChargeTypeHistory.CHARGE)) {
+				information.setCharge("Q." + history.getAmount());
+			} else {
+				information.setPayment("Q." + history.getAmount());
+			}
+			informationList.add(information);
+		}
+
+		AccountStatusReportDTO dto = new AccountStatusReportDTO();
+		System.out.println("Tamanio de lista: " + informationList.size());
+		dto.setInformation(informationList);
+
+		Collection<AccountStatusReportDTO> collectionResponse = Collections.singletonList(dto);
+
+		return collectionResponse;
+	}
+
+	public void sendEmailWithAttachment(String to, String subject, String messageText, String filePath)
+			throws EmailException {
+
+		Properties props = new Properties();
+		props.put("mail.smtp.host", "smtp.gmail.com");
+		props.put("mail.smtp.port", "587");
+		props.put("mail.smtp.auth", "true");
+		props.put("mail.smtp.starttls.enable", "true");
+		props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+
+		Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+			protected PasswordAuthentication getPasswordAuthentication() {
+				return new PasswordAuthentication("oscarmartinez@galileo.edu", "Nickelback20");
+			}
+		});
+
+		// Enviar el correo electrónico con archivo adjunto
+		try {
+			Message message = new MimeMessage(session);
+			message.setFrom(new InternetAddress("oscarmartinez@galileo.edu"));
+			message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
+			message.setSubject(subject);
+
+			BodyPart messageBodyPart = new MimeBodyPart();
+			messageBodyPart.setText(messageText);
+
+			Multipart multipart = new MimeMultipart();
+			multipart.addBodyPart(messageBodyPart);
+
+			messageBodyPart = new MimeBodyPart();
+			DataSource source = new FileDataSource(filePath);
+			messageBodyPart.setDataHandler(new DataHandler(source));
+			messageBodyPart.setFileName(filePath);
+			multipart.addBodyPart(messageBodyPart);
+
+			message.setContent(multipart);
+
+			Transport.send(message);
+
+			System.out.println("Correo enviado con éxito.");
+		} catch (MessagingException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 }

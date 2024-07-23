@@ -68,5 +68,10 @@ public class PaymentController {
 	public void validatePayment(@PathVariable long id) throws Exception {
 		paymentService.validPayment(id);
 	}
+	
+	@PostMapping("/recipt")
+	public void generateAndSendRecipt(@RequestBody long id) throws Exception {
+		paymentService.sendRecipt(id);
+	}
 
 }
