@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import com.oscarmartinez.kproject.entity.Student;
 import com.oscarmartinez.kproject.resource.AccountStatusDTO;
 import com.oscarmartinez.kproject.resource.StudentDTO;
+import com.oscarmartinez.kproject.resource.StudentStatusDTO;
 
 public interface IStudentService {
 
@@ -26,5 +27,9 @@ public interface IStudentService {
 	Student getStudentByLicense(String license) throws Exception;
 	
 	ResponseEntity<HttpStatus> generateAccountStatus(AccountStatusDTO accountStatusDetail) throws Exception;
+	
+	ResponseEntity<StudentStatusDTO> getPendingBalance(String license) throws Exception;
+	
+	ResponseEntity<byte[]> getTelegramAccountStatus(String license) throws Exception;
 
 }

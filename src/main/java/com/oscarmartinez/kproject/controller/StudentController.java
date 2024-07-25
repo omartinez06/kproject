@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.oscarmartinez.kproject.entity.Student;
 import com.oscarmartinez.kproject.resource.AccountStatusDTO;
 import com.oscarmartinez.kproject.resource.StudentDTO;
+import com.oscarmartinez.kproject.resource.StudentStatusDTO;
 import com.oscarmartinez.kproject.service.StudentSeriviceImpl;
 
 @CrossOrigin("*")
@@ -67,6 +68,16 @@ public class StudentController {
 	@PostMapping("/accst")
 	public void generateAccountStatus(@RequestBody AccountStatusDTO accountStatus) throws Exception {
 		studentService.generateAccountStatus(accountStatus);
+	}
+	
+	@GetMapping("/balance/{license}")
+	public ResponseEntity<StudentStatusDTO> getPendingBalance(@PathVariable String license) throws Exception {
+		return studentService.getPendingBalance(license);
+	}
+	
+	@GetMapping("/balance/accsts/{license}")
+	public ResponseEntity<byte[]> getTelegramAccountStatus(@PathVariable String license) throws Exception {
+		return studentService.getTelegramAccountStatus(license);
 	}
 
 }

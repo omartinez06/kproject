@@ -1,10 +1,12 @@
 package com.oscarmartinez.kproject.service;
 
 import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -40,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import com.oscarmartinez.kproject.entity.ChargeHistory;
@@ -58,6 +61,7 @@ import com.oscarmartinez.kproject.resource.AccountStatusDTO;
 import com.oscarmartinez.kproject.resource.AccountStatusReportDTO;
 import com.oscarmartinez.kproject.resource.AccountStatusReportInformation;
 import com.oscarmartinez.kproject.resource.StudentDTO;
+import com.oscarmartinez.kproject.resource.StudentStatusDTO;
 import com.oscarmartinez.kproject.security.JwtProvider;
 
 import lombok.extern.slf4j.Slf4j;
@@ -69,6 +73,8 @@ import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.design.JasperDesign;
 import net.sf.jasperreports.engine.xml.JRXmlLoader;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Service
@@ -174,8 +180,8 @@ public class StudentSeriviceImpl implements IStudentService {
 		}
 		// Mensualidad
 		int monthQuota = calculateProratedQuota(student);
-		
-		if(monthQuota > 0) {
+
+		if (monthQuota > 0) {
 			ChargeMovement chargeDetail = new ChargeMovement();
 			chargeDetail.setAddedDate(new Date());
 			chargeDetail.setAmount(student.getQuota());
@@ -194,19 +200,19 @@ public class StudentSeriviceImpl implements IStudentService {
 			createChargeHistory(chargeDetail);
 		}
 	}
-	
+
 	public int calculateProratedQuota(Student student) {
 		LocalDateTime today = LocalDateTime.now();
 		YearMonth currentYearMonth = YearMonth.from(today);
-        int totalDaysInMonth = currentYearMonth.lengthOfMonth();
-        int daysRemaining = totalDaysInMonth - today.getDayOfMonth() + 1;
+		int totalDaysInMonth = currentYearMonth.lengthOfMonth();
+		int daysRemaining = totalDaysInMonth - today.getDayOfMonth() + 1;
 
-        int dailyRate = student.getQuota() / totalDaysInMonth;
-        logger.debug("{} - The prorate quota is: {}", "calculateProratedQuota()", dailyRate);
-        if(dailyRate > 100)
-        	return dailyRate * daysRemaining;
-        
-        return 0;
+		int dailyRate = student.getQuota() / totalDaysInMonth;
+		logger.debug("{} - The prorate quota is: {}", "calculateProratedQuota()", dailyRate);
+		if (dailyRate > 100)
+			return dailyRate * daysRemaining;
+
+		return 0;
 	}
 
 	public void createChargeHistory(ChargeMovement charge) {
@@ -393,6 +399,113 @@ public class StudentSeriviceImpl implements IStudentService {
 		} catch (MessagingException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	@Override
+	public ResponseEntity<StudentStatusDTO> getPendingBalance(String license) throws Exception {
+		Student student = studentRepository.findByLicense(license);
+
+		if (student != null) {
+			List<ChargeMovement> movements = chargeMovementRepository.findByStudent(student);
+
+			// Utiliza AtomicInteger para mantener un contador mutable
+			AtomicInteger totalValue = new AtomicInteger(0);
+
+			// Recorre la lista y actualiza el totalValue
+			movements.forEach(movement -> {
+				totalValue.addAndGet(movement.getAmount());
+			});
+
+			StudentStatusDTO status = new StudentStatusDTO();
+			status.setPendingBalance(totalValue.get());
+
+			switch (student.getStatus()) {
+			case UP_TO_DATE:
+				status.setStatus("AL DIA");
+				break;
+			case PENDING:
+				status.setStatus("PENDIENTE DE PAGO");
+				break;
+			case DELIQUENT:
+				status.setStatus("EN MORA");
+				break;
+			case LOCKED:
+				status.setStatus("BLOQUEADO");
+				break;
+			default:
+				status.setStatus(null);
+				break;
+			}
+
+			return ResponseEntity.ok(status);
+		}
+
+		return ResponseEntity.ok(null);
+	}
+
+	@Override
+	public ResponseEntity<byte[]> getTelegramAccountStatus(String license) throws Exception {
+		Student student = studentRepository.findByLicense(license);
+
+		if (student != null) {
+			LocalDate today = LocalDate.now();
+			LocalDate threeMonthsAgo = today.minusMonths(3);
+			Collection<AccountStatusReportDTO> collectionAccountStatus = getTelegramReportAccountStatus(student);
+			Map<String, Object> parameters = new HashMap<>();
+			parameters.put("validFrom", threeMonthsAgo.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+			parameters.put("validUntil", today.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+			parameters.put("name", student.getName() + " " + student.getLastName());
+
+			InputStream jrxmlInputStreamAccountStatus = new ClassPathResource("AccountStatus.jrxml").getInputStream();
+			JasperDesign designAccountStatus = JRXmlLoader.load(jrxmlInputStreamAccountStatus);
+			JasperReport jasperReportAccountStatus = JasperCompileManager.compileReport(designAccountStatus);
+			JasperPrint jasperPrintAccountStatus = JasperFillManager.fillReport(jasperReportAccountStatus, parameters,
+					new JRBeanCollectionDataSource(collectionAccountStatus));
+
+			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+			JasperExportManager.exportReportToPdfStream(jasperPrintAccountStatus, byteArrayOutputStream);
+
+			HttpHeaders headers = new HttpHeaders();
+			headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=AccountStatus.pdf");
+			headers.add(HttpHeaders.CONTENT_TYPE, "application/pdf");
+
+			return new ResponseEntity<>(byteArrayOutputStream.toByteArray(), headers, HttpStatus.OK);
+		}
+		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+	}
+
+	public Collection<AccountStatusReportDTO> getTelegramReportAccountStatus(Student student) throws Exception {
+
+		LocalDate today = LocalDate.now();
+		LocalDate threeMonthsAgo = today.minusMonths(3);
+
+		Date todayDate = Date.from(today.atStartOfDay(ZoneId.systemDefault()).toInstant());
+		Date threeMonthsAgoDate = Date.from(threeMonthsAgo.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+		List<ChargeHistory> chargeHistoryList = chargeHistoryRepository
+				.findByAddedDateBetweenAndStudentOrderByAddedDateAsc(threeMonthsAgoDate, todayDate, student);
+
+		List<AccountStatusReportInformation> informationList = new ArrayList<>();
+		for (ChargeHistory history : chargeHistoryList) {
+			AccountStatusReportInformation information = new AccountStatusReportInformation();
+			information.setDate(new SimpleDateFormat("dd/MM/yyyy").format(history.getAddedDate()));
+			information.setDescription(history.getDescription());
+			if (history.getType().equals(ChargeHistory.ChargeTypeHistory.CHARGE)) {
+				information.setCharge("Q." + history.getAmount());
+			} else {
+				information.setPayment("Q." + history.getAmount());
+			}
+			informationList.add(information);
+		}
+
+		AccountStatusReportDTO dto = new AccountStatusReportDTO();
+		System.out.println("Tamanio de lista: " + informationList.size());
+		dto.setInformation(informationList);
+
+		Collection<AccountStatusReportDTO> collectionResponse = Collections.singletonList(dto);
+
+		return collectionResponse;
 	}
 
 }
